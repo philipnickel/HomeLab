@@ -89,10 +89,6 @@ sudo nomad agent -config=config/nomad/macbook.hcl
 Once connected to the cluster:
 
 ```bash
-# Set WireGuard key
-export NOMAD_VAR_wireguard_private_key="..."
-
-# Deploy all jobs
 nomad job run nomad_jobs/core/traefik.nomad.hcl
 nomad job run nomad_jobs/core/vpn.nomad.hcl
 nomad job run nomad_jobs/media/jellyfin.nomad.hcl
@@ -135,9 +131,14 @@ consul catalog services
 
 ## Secrets
 
-Required:
+Secrets are stored in Nomad Variables (not in the repo):
+
 ```bash
-export NOMAD_VAR_wireguard_private_key="..."
+# Store WireGuard key
+nomad var put nomad/jobs/vpn wireguard_private_key="your-key"
+
+# View stored secrets
+nomad var get nomad/jobs/vpn
 ```
 
 Get your WireGuard key from: ProtonVPN → Downloads → WireGuard configuration

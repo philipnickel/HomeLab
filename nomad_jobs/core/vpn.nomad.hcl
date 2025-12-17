@@ -68,16 +68,19 @@ job "vpn" {
         }
       }
 
-      env {
-        VPN_SERVICE_PROVIDER  = "protonvpn"
-        VPN_TYPE              = "wireguard"
-        WIREGUARD_PRIVATE_KEY = "${NOMAD_VAR_wireguard_private_key}"
-        SERVER_COUNTRIES      = "Denmark"
-        TZ                    = "Europe/Copenhagen"
-        HTTPPROXY             = "off"
-        SHADOWSOCKS           = "off"
-        FIREWALL_INPUT_PORTS  = "8082,9696,8989,7878,6767,5055"
-        # Future: add 8085 for qBittorrent
+      template {
+        data        = <<-EOF
+          VPN_SERVICE_PROVIDER=protonvpn
+          VPN_TYPE=wireguard
+          WIREGUARD_PRIVATE_KEY={{ with nomadVar "nomad/jobs/vpn" }}{{ .wireguard_private_key }}{{ end }}
+          SERVER_COUNTRIES=Denmark
+          TZ=Europe/Copenhagen
+          HTTPPROXY=off
+          SHADOWSOCKS=off
+          FIREWALL_INPUT_PORTS=8082,9696,8989,7878,6767,5055
+        EOF
+        destination = "secrets/gluetun.env"
+        env         = true
       }
 
       resources {
@@ -443,7 +446,3 @@ job "vpn" {
   }
 }
 
-variable "wireguard_private_key" {
-  type        = string
-  description = "ProtonVPN WireGuard private key"
-}
