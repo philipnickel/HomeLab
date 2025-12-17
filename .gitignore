@@ -1,0 +1,31 @@
+# Reference/tutorial directories (not part of the project)
+hashi-homelab/
+learn-nomad-getting-started/
+CasaDiMaria/
+
+# Secrets and environment files
+.envrc
+.env
+*.env
+secrets/
+*.secret
+
+# Backup files
+*.tar.gz
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Editor/IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Terraform state (if used later)
+*.tfstate
+*.tfstate.*
+.terraform/

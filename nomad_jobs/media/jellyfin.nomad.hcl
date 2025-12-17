@@ -1,0 +1,84 @@
+job "jellyfin" {
+  datacenters = ["dc1"]
+  type        = "service"
+
+  constraint {
+    attribute = "${meta.shared_mount}"
+    operator  = "="
+    value     = "true"
+  }
+
+  group "jellyfin" {
+    count = 1
+
+    network {
+      port "http" {
+        static       = 8096
+        host_network = "lan"
+      }
+    }
+
+    volume "config" {
+      type      = "host"
+      source    = "config"
+      read_only = false
+    }
+
+    volume "media" {
+      type      = "host"
+      source    = "media"
+      read_only = false
+    }
+
+    update {
+      max_parallel     = 1
+      min_healthy_time = "30s"
+      auto_revert      = true
+    }
+
+    task "jellyfin" {
+      driver = "docker"
+
+      config {
+        image = "jellyfin/jellyfin:latest"
+        ports = ["http"]
+        volumes = [
+          "/opt/nomad/config-volumes/jellyfin:/config",
+          "/opt/nomad/config-volumes/jellyfin/cache:/cache",
+        ]
+      }
+
+      volume_mount {
+        volume      = "media"
+        destination = "/media"
+        read_only   = false
+      }
+
+      env {
+        JELLYFIN_PublishedServerUrl = "http://jelly.kni.dk"
+      }
+
+      service {
+        name = "jellyfin"
+        port = "http"
+        tags = [
+          "traefik.enable=true",
+          "traefik.http.routers.jellyfin.rule=Host(`jelly.kni.dk`)",
+          "traefik.http.routers.jellyfin.entrypoints=web",
+        ]
+
+        check {
+          type     = "http"
+          path     = "/health"
+          interval = "30s"
+          timeout  = "5s"
+        }
+      }
+
+      resources {
+        cpu    = 2000
+        memory = 2048
+      }
+    }
+  }
+}
