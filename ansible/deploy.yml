@@ -14,10 +14,17 @@
     repo_dir: "/home/{{ ansible_user }}/HomeLab"
 
     # Default: deploy all jobs
+    # Order matters: traefik first, then gluetun (VPN), then services that connect to gluetun
     jobs_to_deploy:
       - core/traefik.nomad.hcl
-      - core/vpn.nomad.hcl
-      - media/jellyfin.nomad.hcl
+      - core/gluetun.nomad.hcl
+      - core/prowlarr.nomad.hcl
+      - core/sonarr.nomad.hcl
+      - core/radarr.nomad.hcl
+      - core/bazarr.nomad.hcl
+      - core/sabnzbd.nomad.hcl
+      - core/jellyfin.nomad.hcl
+      - core/jellyseerr.nomad.hcl
 
   tasks:
     - name: Clone or update HomeLab repo

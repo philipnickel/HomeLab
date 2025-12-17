@@ -7,54 +7,30 @@ job "gluetun" {
     count = 1
 
     network {
-      port "prowlarr" {
-        static = 9696
-        to     = 9696
-      }
-      port "sonarr" {
-        static = 8989
-        to     = 8989
-      }
-      port "radarr" {
-        static = 7878
-        to     = 7878
-      }
-      port "bazarr" {
-        static = 6767
-        to     = 6767
-      }
-      port "sabnzbd" {
-        static = 8082
-        to     = 8082
-      }
-      port "control" {
-        static = 8000
-        to     = 8000
-      }
+      port "prowlarr" { static = 9696 }
+      port "sonarr"   { static = 8989 }
+      port "radarr"   { static = 7878 }
+      port "bazarr"   { static = 6767 }
+      port "sabnzbd"  { static = 8082 }
     }
 
     task "gluetun" {
       driver = "docker"
 
       config {
-        image = "qmcgaw/gluetun:latest"
-        ports = ["prowlarr", "sonarr", "radarr", "bazarr", "sabnzbd", "control"]
+        image          = "qmcgaw/gluetun:latest"
+        container_name = "gluetun"
+        ports          = ["prowlarr", "sonarr", "radarr", "bazarr", "sabnzbd"]
+        cap_add        = ["NET_ADMIN"]
 
-        cap_add = ["NET_ADMIN"]
-        devices = [
-          {
-            host_path      = "/dev/net/tun"
-            container_path = "/dev/net/tun"
-          }
-        ]
-
-        sysctl = {
-          "net.ipv6.conf.all.disable_ipv6" = "1"
-        }
+        devices = [{
+          host_path      = "/dev/net/tun"
+          container_path = "/dev/net/tun"
+        }]
       }
 
       template {
-        data        = <<-EOF
+        data = <<-EOF
           {{ with nomadVar "nomad/jobs/vpn" }}
           VPN_SERVICE_PROVIDER=protonvpn
           VPN_TYPE=wireguard
@@ -62,9 +38,7 @@ job "gluetun" {
           SERVER_COUNTRIES={{ .SERVER_COUNTRIES }}
           {{ end }}
           TZ=Europe/Copenhagen
-          HTTPPROXY=off
-          SHADOWSOCKS=off
-          FIREWALL_INPUT_PORTS=9696,8989,7878,6767,8082,8000
+          FIREWALL_INPUT_PORTS=9696,8989,7878,6767,8082
         EOF
         destination = "secrets/gluetun.env"
         env         = true
@@ -74,26 +48,81 @@ job "gluetun" {
         cpu    = 200
         memory = 256
       }
+    }
 
-      # Register with Consul - store container name for discovery
-      service {
-        name = "gluetun"
-        port = "control"
+    # Service registrations for Traefik (ports exposed on gluetun)
+    service {
+      name = "prowlarr"
+      port = "prowlarr"
+      tags = [
+        "traefik.enable=true",
+        "traefik.http.routers.prowlarr.rule=Host(`prowlarr.kni.dk`)",
+        "traefik.http.routers.prowlarr.entrypoints=web",
+      ]
+      check {
+        type     = "tcp"
+        interval = "30s"
+        timeout  = "5s"
+      }
+    }
 
-        meta {
-          # Other services will use this to construct the container name
-          container_name = "gluetun-${NOMAD_ALLOC_ID}"
-        }
+    service {
+      name = "sonarr"
+      port = "sonarr"
+      tags = [
+        "traefik.enable=true",
+        "traefik.http.routers.sonarr.rule=Host(`sonarr.kni.dk`)",
+        "traefik.http.routers.sonarr.entrypoints=web",
+      ]
+      check {
+        type     = "tcp"
+        interval = "30s"
+        timeout  = "5s"
+      }
+    }
 
-        tags = [
-          "traefik.enable=false",
-        ]
+    service {
+      name = "radarr"
+      port = "radarr"
+      tags = [
+        "traefik.enable=true",
+        "traefik.http.routers.radarr.rule=Host(`radarr.kni.dk`)",
+        "traefik.http.routers.radarr.entrypoints=web",
+      ]
+      check {
+        type     = "tcp"
+        interval = "30s"
+        timeout  = "5s"
+      }
+    }
 
-        check {
-          type     = "tcp"
-          interval = "10s"
-          timeout  = "3s"
-        }
+    service {
+      name = "bazarr"
+      port = "bazarr"
+      tags = [
+        "traefik.enable=true",
+        "traefik.http.routers.bazarr.rule=Host(`bazarr.kni.dk`)",
+        "traefik.http.routers.bazarr.entrypoints=web",
+      ]
+      check {
+        type     = "tcp"
+        interval = "30s"
+        timeout  = "5s"
+      }
+    }
+
+    service {
+      name = "sabnzbd"
+      port = "sabnzbd"
+      tags = [
+        "traefik.enable=true",
+        "traefik.http.routers.sabnzbd.rule=Host(`sabnzbd.kni.dk`)",
+        "traefik.http.routers.sabnzbd.entrypoints=web",
+      ]
+      check {
+        type     = "tcp"
+        interval = "30s"
+        timeout  = "5s"
       }
     }
   }
