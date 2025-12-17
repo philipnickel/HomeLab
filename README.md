@@ -15,6 +15,7 @@ ThinkPad Server (services pool)
 │
 ├── Jellyfin   (Media Streaming)
 ├── Jellyseerr (Request Management)
+├── Tdarr      (Media Transcoding)
 │
 └── monitoring (Prometheus + Grafana + Node Exporter)
 
@@ -43,6 +44,7 @@ MacBook Client (compute pool)
 | **Media** |||
 | Jellyfin | http://jellyfin.kni.dk | Media Server |
 | Jellyseerr | http://jellyseerr.kni.dk | Request Management |
+| Tdarr | http://tdarr.kni.dk | Media Transcoding |
 | **Monitoring** |||
 | Prometheus | http://prometheus.kni.dk | Metrics Collection |
 | Grafana | http://grafana.kni.dk | Dashboards |
@@ -91,7 +93,8 @@ HomeLab/
         ├── jellyfin.nomad.hcl
         ├── jellyseerr.nomad.hcl
         ├── monitoring.nomad.hcl
-        └── homepage.nomad.hcl
+        ├── homepage.nomad.hcl
+        └── tdarr.nomad.hcl
 ```
 
 ## Make Commands
