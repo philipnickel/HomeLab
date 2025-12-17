@@ -46,8 +46,7 @@ job "jellyfin" {
         ]
 
         check {
-          type     = "http"
-          path     = "/health"
+          type     = "tcp"
           interval = "30s"
           timeout  = "5s"
         }
