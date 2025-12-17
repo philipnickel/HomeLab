@@ -28,7 +28,7 @@ job "homepage" {
       env {
         PUID                   = "1000"
         PGID                   = "1000"
-        HOMEPAGE_ALLOWED_HOSTS = "homepage.kni.dk,kni.dk"
+        HOMEPAGE_ALLOWED_HOSTS = "homepage.kni.dk,kni.dk,192.168.0.39:3001"
       }
 
       resources {
