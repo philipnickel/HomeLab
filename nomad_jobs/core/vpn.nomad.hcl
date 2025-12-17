@@ -9,10 +9,6 @@ job "vpn" {
     network {
       mode = "bridge"
 
-      port "sabnzbd" {
-        static = 8082
-        to     = 8082
-      }
       port "prowlarr" {
         static = 9696
         to     = 9696
@@ -31,24 +27,6 @@ job "vpn" {
       }
     }
 
-    volume "config" {
-      type      = "host"
-      source    = "config"
-      read_only = false
-    }
-
-    volume "downloads" {
-      type      = "host"
-      source    = "downloads"
-      read_only = false
-    }
-
-    volume "media" {
-      type      = "host"
-      source    = "media"
-      read_only = false
-    }
-
     # ============================================
     # GLUETUN - VPN Container (Main Task)
     # ============================================
@@ -57,7 +35,7 @@ job "vpn" {
 
       config {
         image = "qmcgaw/gluetun:latest"
-        ports = ["sabnzbd", "prowlarr", "sonarr", "radarr", "bazarr"]
+        ports = ["prowlarr", "sonarr", "radarr", "bazarr"]
 
         cap_add = ["NET_ADMIN"]
         devices = [
@@ -83,7 +61,7 @@ job "vpn" {
           TZ=Europe/Copenhagen
           HTTPPROXY=off
           SHADOWSOCKS=off
-          FIREWALL_INPUT_PORTS=8082,9696,8989,7878,6767
+          FIREWALL_INPUT_PORTS=9696,8989,7878,6767
         EOF
         destination = "secrets/gluetun.env"
         env         = true
@@ -96,60 +74,10 @@ job "vpn" {
 
       service {
         name = "gluetun"
-        port = "sabnzbd"
+        port = "prowlarr"
 
         check {
           type     = "tcp"
-          interval = "30s"
-          timeout  = "5s"
-        }
-      }
-    }
-
-    # ============================================
-    # SABNZBD - Usenet Downloader
-    # ============================================
-    task "sabnzbd" {
-      driver = "docker"
-
-      lifecycle {
-        hook    = "poststart"
-        sidecar = true
-      }
-
-      config {
-        image = "linuxserver/sabnzbd:latest"
-        volumes = [
-          "/opt/nomad/config-volumes/sabnzbd:/config",
-          "/opt/nomad/downloads:/downloads",
-          "/media/t7/media:/media",
-        ]
-      }
-
-      env {
-        PUID           = "1000"
-        PGID           = "1000"
-        TZ             = "Europe/Copenhagen"
-        HOST_WHITELIST = "sabnzbd.kni.dk"
-      }
-
-      resources {
-        cpu    = 500
-        memory = 1024
-      }
-
-      service {
-        name = "sabnzbd"
-        port = "sabnzbd"
-        tags = [
-          "traefik.enable=true",
-          "traefik.http.routers.sabnzbd.rule=Host(`sabnzbd.kni.dk`)",
-          "traefik.http.routers.sabnzbd.entrypoints=web",
-        ]
-
-        check {
-          type     = "http"
-          path     = "/"
           interval = "30s"
           timeout  = "5s"
         }
@@ -178,6 +106,11 @@ job "vpn" {
         PUID = "1000"
         PGID = "1000"
         TZ   = "Europe/Copenhagen"
+        # *arr environment variable configuration
+        PROWLARR__SERVER__PORT        = "9696"
+        PROWLARR__SERVER__BINDADDRESS = "*"
+        PROWLARR__AUTH__METHOD        = "None"
+        PROWLARR__LOG__LEVEL          = "info"
       }
 
       resources {
@@ -227,6 +160,11 @@ job "vpn" {
         PUID = "1000"
         PGID = "1000"
         TZ   = "Europe/Copenhagen"
+        # *arr environment variable configuration
+        SONARR__SERVER__PORT        = "8989"
+        SONARR__SERVER__BINDADDRESS = "*"
+        SONARR__AUTH__METHOD        = "None"
+        SONARR__LOG__LEVEL          = "info"
       }
 
       resources {
@@ -276,6 +214,11 @@ job "vpn" {
         PUID = "1000"
         PGID = "1000"
         TZ   = "Europe/Copenhagen"
+        # *arr environment variable configuration
+        RADARR__SERVER__PORT        = "7878"
+        RADARR__SERVER__BINDADDRESS = "*"
+        RADARR__AUTH__METHOD        = "None"
+        RADARR__LOG__LEVEL          = "info"
       }
 
       resources {
@@ -303,6 +246,7 @@ job "vpn" {
 
     # ============================================
     # BAZARR - Subtitle Management
+    # Note: Bazarr uses Flask, not the *arr codebase
     # ============================================
     task "bazarr" {
       driver = "docker"
@@ -350,6 +294,56 @@ job "vpn" {
     }
 
     # ============================================
+    # SABNZBD - Usenet Downloader (COMMENTED OUT)
+    # Requires manual config file setup for HOST_WHITELIST
+    # ============================================
+    # task "sabnzbd" {
+    #   driver = "docker"
+    #
+    #   lifecycle {
+    #     hook    = "poststart"
+    #     sidecar = true
+    #   }
+    #
+    #   config {
+    #     image = "linuxserver/sabnzbd:latest"
+    #     volumes = [
+    #       "/opt/nomad/config-volumes/sabnzbd:/config",
+    #       "/opt/nomad/downloads:/downloads",
+    #       "/media/t7/media:/media",
+    #     ]
+    #   }
+    #
+    #   env {
+    #     PUID = "1000"
+    #     PGID = "1000"
+    #     TZ   = "Europe/Copenhagen"
+    #   }
+    #
+    #   resources {
+    #     cpu    = 500
+    #     memory = 1024
+    #   }
+    #
+    #   service {
+    #     name = "sabnzbd"
+    #     port = "sabnzbd"
+    #     tags = [
+    #       "traefik.enable=true",
+    #       "traefik.http.routers.sabnzbd.rule=Host(`sabnzbd.kni.dk`)",
+    #       "traefik.http.routers.sabnzbd.entrypoints=web",
+    #     ]
+    #
+    #     check {
+    #       type     = "http"
+    #       path     = "/"
+    #       interval = "30s"
+    #       timeout  = "5s"
+    #     }
+    #   }
+    # }
+
+    # ============================================
     # Future: QBITTORRENT - Torrent Client
     # ============================================
     # task "qbittorrent" {
@@ -361,8 +355,7 @@ job "vpn" {
     #   }
     #
     #   config {
-    #     image        = "linuxserver/qbittorrent:latest"
-    #     network_mode = "container:${NOMAD_ALLOC_ID}-gluetun"
+    #     image = "linuxserver/qbittorrent:latest"
     #     volumes = [
     #       "/opt/nomad/config-volumes/qbittorrent:/config",
     #       "/opt/nomad/downloads:/downloads",
@@ -400,4 +393,3 @@ job "vpn" {
     # }
   }
 }
-
