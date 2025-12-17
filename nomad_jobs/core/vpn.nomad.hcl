@@ -76,17 +76,13 @@ job "vpn" {
         }
       }
 
-      vault {
-        policies = ["nomad-vpn"]
-      }
-
       template {
         data        = <<-EOF
-          {{ with secret "secret/data/vpn" }}
+          {{ with nomadVar "nomad/jobs/vpn" }}
           VPN_SERVICE_PROVIDER=protonvpn
           VPN_TYPE=wireguard
-          WIREGUARD_PRIVATE_KEY={{ .Data.data.wireguard_private_key }}
-          SERVER_COUNTRIES={{ .Data.data.server_countries }}
+          WIREGUARD_PRIVATE_KEY={{ .WIREGUARD_PRIVATE_KEY }}
+          SERVER_COUNTRIES={{ .SERVER_COUNTRIES }}
           {{ end }}
           TZ=Europe/Copenhagen
           HTTPPROXY=off
