@@ -11,7 +11,7 @@ job "vpn" {
 
       port "sabnzbd" {
         static = 8082
-        to     = 8082
+        to     = 8080
       }
       port "prowlarr" {
         static = 9696
@@ -83,7 +83,7 @@ job "vpn" {
           TZ=Europe/Copenhagen
           HTTPPROXY=off
           SHADOWSOCKS=off
-          FIREWALL_INPUT_PORTS=8082,9696,8989,7878,6767
+          FIREWALL_INPUT_PORTS=8080,9696,8989,7878,6767
         EOF
         destination = "secrets/gluetun.env"
         env         = true
