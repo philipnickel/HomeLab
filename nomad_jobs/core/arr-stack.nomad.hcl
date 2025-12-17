@@ -38,6 +38,7 @@ job "arr-stack" {
           {{ end }}
           TZ=Europe/Copenhagen
           FIREWALL_INPUT_PORTS=9696,8989,7878,6767
+          FIREWALL_OUTBOUND_SUBNETS=192.168.0.0/24
         EOF
         destination = "secrets/gluetun.env"
         env         = true
