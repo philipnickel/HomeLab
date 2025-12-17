@@ -117,25 +117,12 @@ job "vpn" {
         sidecar = true
       }
 
-      volume_mount {
-        volume      = "config"
-        destination = "/nomad-config"
-      }
-
-      volume_mount {
-        volume      = "downloads"
-        destination = "/downloads"
-      }
-
-      volume_mount {
-        volume      = "media"
-        destination = "/media"
-      }
-
       config {
         image = "linuxserver/sabnzbd:latest"
         volumes = [
-          "/nomad-config/sabnzbd:/config",
+          "/opt/nomad/config-volumes/sabnzbd:/config",
+          "/opt/nomad/downloads:/downloads",
+          "/media/t7/media:/media",
         ]
       }
 
