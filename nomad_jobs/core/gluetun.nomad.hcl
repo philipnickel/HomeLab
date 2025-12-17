@@ -87,8 +87,8 @@ job "gluetun" {
 
         check {
           type     = "tcp"
-          interval = "30s"
-          timeout  = "5s"
+          interval = "10s"
+          timeout  = "3s"
         }
       }
     }

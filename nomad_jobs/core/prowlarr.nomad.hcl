@@ -67,20 +67,12 @@ job "prowlarr" {
 
       service {
         name = "prowlarr"
-        port = "9696"
         tags = [
           "traefik.enable=true",
           "traefik.http.routers.prowlarr.rule=Host(`prowlarr.kni.dk`)",
           "traefik.http.routers.prowlarr.entrypoints=web",
+          "traefik.http.services.prowlarr.loadbalancer.server.port=9696",
         ]
-
-        check {
-          type     = "script"
-          command  = "/bin/bash"
-          args     = ["-c", "curl -sf http://localhost:9696/ping || exit 1"]
-          interval = "30s"
-          timeout  = "5s"
-        }
       }
     }
   }
