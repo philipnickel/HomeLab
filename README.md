@@ -63,74 +63,44 @@ A self-hosted media server stack running on HashiCorp Nomad with VPN protection.
 
 ```
 HomeLab/
-├── .github/workflows/
-│   └── deploy.yml             # CI/CD pipeline
-├── config/nomad/
-│   └── nomad.hcl              # Nomad server config (host volumes, networks)
+├── config/
+│   ├── nomad/
+│   │   └── nomad.hcl              # ThinkPad server config
+│   └── nomad-client/
+│       └── nomad.hcl              # Mac client config (deploy only)
 └── nomad_jobs/
     ├── core/
-    │   ├── traefik.nomad.hcl  # Reverse proxy
-    │   └── vpn.nomad.hcl      # Gluetun + arr stack + jellyseerr
+    │   ├── traefik.nomad.hcl      # Reverse proxy
+    │   └── vpn.nomad.hcl          # Gluetun + arr stack + jellyseerr
     └── media/
-        └── jellyfin.nomad.hcl # Media server (no VPN)
+        └── jellyfin.nomad.hcl     # Media server (no VPN)
 ```
 
 ## Deployment
 
-### CI/CD (GitHub Actions)
+### Start Nomad Client (Mac)
 
-Jobs are automatically deployed when changes are pushed to `main`. The workflow:
-
-1. **Validates** all job files
-2. **Plans** changes and extracts check-index
-3. **Deploys** atomically with `-check-index` to prevent race conditions
-
-#### GitHub Secrets Required
-
-Configure these in your repository settings (Settings → Secrets and variables → Actions):
-
-| Secret | Description |
-|--------|-------------|
-| `NOMAD_ADDR` | Nomad server Tailscale address (e.g., `http://100.75.14.19:4646`) |
-| `WIREGUARD_PRIVATE_KEY` | ProtonVPN WireGuard private key |
-| `TS_OAUTH_CLIENT_ID` | Tailscale OAuth client ID |
-| `TS_OAUTH_SECRET` | Tailscale OAuth client secret |
-
-#### Tailscale Setup
-
-The CI runners connect to your Nomad server via Tailscale. Create an OAuth client:
-
-1. Go to [Tailscale Admin Console](https://login.tailscale.com/admin/settings/oauth)
-2. Generate OAuth client with **Devices: Write** scope
-3. Add `tag:ci` to the tags
-4. Add this to your ACL policy:
-   ```json
-   "tagOwners": {
-     "tag:ci": ["autogroup:admin"]
-   }
-   ```
-
-#### Manual Deployment
-
-Trigger a deployment manually from Actions → Deploy Nomad Jobs → Run workflow.
-
-You can deploy all jobs or select a specific one (traefik, vpn, jellyfin).
-
-### Local Deployment
-
-For local testing or initial setup:
+Join the cluster as a client to deploy jobs:
 
 ```bash
-export NOMAD_ADDR="http://192.168.0.39:4646"
-export NOMAD_VAR_wireguard_private_key="your-key"
-
-# Validate
-nomad job validate nomad_jobs/core/vpn.nomad.hcl
-
-# Plan and deploy
-nomad job plan nomad_jobs/core/traefik.nomad.hcl
-nomad job run nomad_jobs/core/traefik.nomad.hcl
+sudo nomad agent -config=config/nomad-client/nomad.hcl
 ```
+
+### Deploy Jobs
+
+Once connected to the cluster:
+
+```bash
+# Set WireGuard key
+export NOMAD_VAR_wireguard_private_key="..."
+
+# Deploy all jobs
+nomad job run nomad_jobs/core/traefik.nomad.hcl
+nomad job run nomad_jobs/core/vpn.nomad.hcl
+nomad job run nomad_jobs/media/jellyfin.nomad.hcl
+```
+
+Jobs target the ThinkPad via the `shared_mount` constraint.
 
 ### Stop Jobs
 
@@ -151,6 +121,9 @@ ssh homelab "sudo cp /tmp/nomad.hcl /etc/nomad.d/nomad.hcl && sudo systemctl res
 ## Monitoring
 
 ```bash
+# Cluster status
+nomad node status
+
 # Job status
 nomad job status vpn
 
@@ -180,4 +153,3 @@ Get your WireGuard key from: ProtonVPN → Downloads → WireGuard configuration
 
 - [Deploy and manage jobs | Nomad](https://developer.hashicorp.com/nomad/tutorials/manage-jobs/jobs)
 - [Job specification | Nomad](https://developer.hashicorp.com/nomad/docs/job-specification)
-- [Nomad Pack](https://developer.hashicorp.com/nomad/tools/nomad-pack)

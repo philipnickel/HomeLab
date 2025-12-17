@@ -1,5 +1,5 @@
 job "jellyfin" {
-  datacenters = ["dc1"]
+  datacenters = ["homelab"]
   type        = "service"
 
   constraint {

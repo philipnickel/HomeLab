@@ -1,7 +1,7 @@
 # Nomad Configuration for HomeLab
 # Copy to /etc/nomad.d/nomad.hcl on the server
 
-datacenter = "dc1"
+datacenter = "homelab"
 data_dir   = "/opt/nomad/data"
 bind_addr  = "0.0.0.0"
 region     = "home"
