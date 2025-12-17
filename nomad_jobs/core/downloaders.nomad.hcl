@@ -8,7 +8,7 @@ job "downloaders" {
 
     network {
       port "sabnzbd"     { static = 8082 }
-      port "qbittorrent" { static = 8080 }
+      port "qbittorrent" { static = 8085 }
     }
 
     # Gluetun VPN - main task that owns the network
@@ -35,7 +35,7 @@ job "downloaders" {
           SERVER_COUNTRIES={{ .SERVER_COUNTRIES }}
           {{ end }}
           TZ=Europe/Copenhagen
-          FIREWALL_INPUT_PORTS=8082,8080
+          FIREWALL_INPUT_PORTS=8082,8085
         EOF
         destination = "secrets/gluetun.env"
         env         = true
@@ -102,7 +102,7 @@ job "downloaders" {
         PUID            = "1000"
         PGID            = "1000"
         TZ              = "Europe/Copenhagen"
-        WEBUI_PORT      = "8080"
+        WEBUI_PORT      = "8085"
       }
 
       resources {
