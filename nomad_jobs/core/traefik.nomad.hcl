@@ -67,6 +67,8 @@ job "traefik" {
               [providers.consulCatalog.endpoint]
                 address = "127.0.0.1:8500"
                 scheme = "http"
+            [providers.file]
+              filename = "/local/dynamic.toml"
 
           [log]
             level = "INFO"
@@ -74,6 +76,37 @@ job "traefik" {
           [accessLog]
         EOF
         destination = "local/traefik.toml"
+      }
+
+      template {
+        data = <<-EOF
+          # Static routes for infrastructure services
+          [http.routers]
+            [http.routers.nomad]
+              rule = "Host(`nomad.kni.dk`)"
+              service = "nomad"
+              entryPoints = ["web"]
+            [http.routers.consul]
+              rule = "Host(`consul.kni.dk`)"
+              service = "consul"
+              entryPoints = ["web"]
+            [http.routers.vault]
+              rule = "Host(`vault.kni.dk`)"
+              service = "vault"
+              entryPoints = ["web"]
+
+          [http.services]
+            [http.services.nomad.loadBalancer]
+              [[http.services.nomad.loadBalancer.servers]]
+                url = "http://127.0.0.1:4646"
+            [http.services.consul.loadBalancer]
+              [[http.services.consul.loadBalancer.servers]]
+                url = "http://127.0.0.1:8500"
+            [http.services.vault.loadBalancer]
+              [[http.services.vault.loadBalancer.servers]]
+                url = "http://127.0.0.1:8200"
+        EOF
+        destination = "local/dynamic.toml"
       }
 
       service {
