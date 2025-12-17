@@ -1,58 +1,48 @@
-# ThinkPad Server Configuration
-# Copy to /etc/nomad.d/nomad.hcl
-
-datacenter = "homelab"
-data_dir   = "/opt/nomad/data"
+datacenter = "{{ datacenter }}"
+data_dir   = "{{ nomad_data_dir }}"
 bind_addr  = "0.0.0.0"
-region     = "home"
+region     = "{{ region }}"
 
 advertise {
-  http = "{{ GetPrivateIP }}"
-  rpc  = "{{ GetPrivateIP }}"
-  serf = "{{ GetPrivateIP }}"
+  http = "{{ ansible_default_ipv4.address }}"
+  rpc  = "{{ ansible_default_ipv4.address }}"
+  serf = "{{ ansible_default_ipv4.address }}"
 }
 
-# Server configuration (single node)
 server {
   enabled          = true
   bootstrap_expect = 1
 }
 
-# Client configuration
 client {
   enabled = true
 
-  # Docker driver options
   options = {
     "docker.privileged.enabled" = "true"
     "driver.raw_exec.enable"    = "1"
     "docker.volumes.enabled"    = "true"
   }
 
-  # Host Volumes - abstract storage locations
-  # Jobs reference these by name, paths defined here only
   host_volume "config" {
-    path      = "/opt/nomad/config-volumes"
+    path      = "{{ config_volumes_dir }}"
     read_only = false
   }
 
   host_volume "downloads" {
-    path      = "/opt/nomad/downloads"
+    path      = "{{ downloads_dir }}"
     read_only = false
   }
 
   host_volume "media" {
-    path      = "/media/t7/media"
+    path      = "{{ media_dir }}"
     read_only = false
   }
 
-  # Node metadata for job constraints
   meta {
-    node         = "thinkpad"
+    node         = "{{ inventory_hostname }}"
     shared_mount = "true"
   }
 
-  # Host Networks - for binding services to specific interfaces
   host_network "tailscale" {
     cidr = "100.0.0.0/8"
   }
@@ -62,7 +52,6 @@ client {
   }
 }
 
-# Docker plugin configuration
 plugin "docker" {
   config {
     allow_caps = [
@@ -78,14 +67,11 @@ plugin "docker" {
   }
 }
 
-# Consul integration
 consul {
   address = "127.0.0.1:8500"
 }
 
-# Telemetry for monitoring (enable later with Prometheus)
-# telemetry {
-#   publish_allocation_metrics = true
-#   publish_node_metrics       = true
-#   prometheus_metrics         = true
-# }
+vault {
+  enabled = true
+  address = "http://127.0.0.1:8200"
+}

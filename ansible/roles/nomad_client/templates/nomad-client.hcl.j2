@@ -1,35 +1,26 @@
-# MacBook Client Configuration
-# Run with: sudo nomad agent -config=config/nomad/macbook.hcl
+datacenter = "{{ datacenter }}"
+region     = "{{ region }}"
+data_dir   = "{{ nomad_data_dir }}"
 
-datacenter = "homelab"
-region     = "home"
-data_dir   = "/opt/nomad/data"
-
-# Client only (no server)
 server {
   enabled = false
 }
 
 client {
   enabled = true
+  servers = ["{{ nomad_server_addr }}:4647"]
 
-  # Join ThinkPad server via Tailscale
-  servers = ["100.75.14.19:4647"]
-
-  # Docker driver options
   options = {
     "docker.privileged.enabled" = "true"
     "driver.raw_exec.enable"    = "1"
     "docker.volumes.enabled"    = "true"
   }
 
-  # Node metadata for job constraints
   meta {
-    node = "macbook"
+    node = "{{ inventory_hostname }}"
   }
 }
 
-# Docker plugin configuration
 plugin "docker" {
   config {
     allow_caps = [

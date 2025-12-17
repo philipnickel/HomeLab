@@ -1,0 +1,50 @@
+---
+- name: Ensure Nomad data directory exists
+  file:
+    path: "{{ nomad_data_dir }}"
+    state: directory
+    owner: nomad
+    group: nomad
+    mode: '0755'
+
+- name: Ensure config volumes directory exists
+  file:
+    path: "{{ config_volumes_dir }}"
+    state: directory
+    owner: nomad
+    group: nomad
+    mode: '0755'
+
+- name: Ensure downloads directory exists
+  file:
+    path: "{{ downloads_dir }}"
+    state: directory
+    owner: nomad
+    group: nomad
+    mode: '0755'
+
+- name: Deploy Nomad configuration
+  template:
+    src: nomad.hcl.j2
+    dest: "{{ nomad_config_dir }}/nomad.hcl"
+    owner: nomad
+    group: nomad
+    mode: '0640'
+
+- name: Enable Nomad service
+  systemd:
+    name: nomad
+    enabled: true
+
+- name: Start Nomad
+  shell: systemctl start nomad
+  async: 10
+  poll: 0
+
+- name: Wait for Nomad to be ready
+  uri:
+    url: http://127.0.0.1:4646/v1/status/leader
+  register: result
+  until: result.status == 200
+  retries: 30
+  delay: 2

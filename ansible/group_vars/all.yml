@@ -1,0 +1,21 @@
+---
+datacenter: homelab
+region: home
+
+# Server address (Tailscale IP)
+nomad_server_addr: 100.75.14.19
+
+# Directories
+nomad_data_dir: /opt/nomad/data
+consul_data_dir: /opt/consul/data
+vault_data_dir: /opt/vault/data
+
+# Config directories
+nomad_config_dir: /etc/nomad.d
+consul_config_dir: /etc/consul.d
+vault_config_dir: /etc/vault.d
+
+# Nomad volumes
+config_volumes_dir: /opt/nomad/config-volumes
+downloads_dir: /opt/nomad/downloads
+media_dir: /media/t7/media
