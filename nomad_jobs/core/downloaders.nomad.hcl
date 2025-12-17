@@ -7,7 +7,8 @@ job "downloaders" {
     count = 1
 
     network {
-      port "sabnzbd" { static = 8082 }
+      port "sabnzbd"     { static = 8082 }
+      port "qbittorrent" { static = 8080 }
     }
 
     # Gluetun VPN - main task that owns the network
@@ -16,7 +17,7 @@ job "downloaders" {
 
       config {
         image   = "qmcgaw/gluetun:latest"
-        ports   = ["sabnzbd"]
+        ports   = ["sabnzbd", "qbittorrent"]
         cap_add = ["NET_ADMIN"]
 
         devices = [{
@@ -34,7 +35,7 @@ job "downloaders" {
           SERVER_COUNTRIES={{ .SERVER_COUNTRIES }}
           {{ end }}
           TZ=Europe/Copenhagen
-          FIREWALL_INPUT_PORTS=8082
+          FIREWALL_INPUT_PORTS=8082,8080
         EOF
         destination = "secrets/gluetun.env"
         env         = true
@@ -78,7 +79,39 @@ job "downloaders" {
       }
     }
 
-    # Traefik service registration
+    # qBittorrent - torrent downloader
+    task "qbittorrent" {
+      driver = "docker"
+
+      lifecycle {
+        hook    = "poststart"
+        sidecar = true
+      }
+
+      config {
+        image        = "linuxserver/qbittorrent:latest"
+        network_mode = "container:gluetun-${NOMAD_ALLOC_ID}"
+
+        volumes = [
+          "/opt/nomad/config-volumes/qbittorrent:/config",
+          "/opt/nomad/downloads:/downloads",
+        ]
+      }
+
+      env {
+        PUID            = "1000"
+        PGID            = "1000"
+        TZ              = "Europe/Copenhagen"
+        WEBUI_PORT      = "8080"
+      }
+
+      resources {
+        cpu    = 500
+        memory = 1024
+      }
+    }
+
+    # Traefik service registrations
     service {
       name = "sabnzbd"
       port = "sabnzbd"
@@ -86,6 +119,21 @@ job "downloaders" {
         "traefik.enable=true",
         "traefik.http.routers.sabnzbd.rule=Host(`sabnzbd.kni.dk`)",
         "traefik.http.routers.sabnzbd.entrypoints=web",
+      ]
+      check {
+        type     = "tcp"
+        interval = "30s"
+        timeout  = "5s"
+      }
+    }
+
+    service {
+      name = "qbittorrent"
+      port = "qbittorrent"
+      tags = [
+        "traefik.enable=true",
+        "traefik.http.routers.qbittorrent.rule=Host(`qbittorrent.kni.dk`)",
+        "traefik.http.routers.qbittorrent.entrypoints=web",
       ]
       check {
         type     = "tcp"
