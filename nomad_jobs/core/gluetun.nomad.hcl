@@ -90,8 +90,7 @@ job "gluetun" {
         ]
 
         check {
-          type     = "http"
-          path     = "/"
+          type     = "tcp"
           interval = "10s"
           timeout  = "3s"
         }
