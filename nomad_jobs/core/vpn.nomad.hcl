@@ -109,7 +109,8 @@ job "vpn" {
         # *arr environment variable configuration
         PROWLARR__SERVER__PORT        = "9696"
         PROWLARR__SERVER__BINDADDRESS = "*"
-        PROWLARR__AUTH__METHOD        = "None"
+        PROWLARR__AUTH__METHOD        = "External"
+        PROWLARR__AUTH__REQUIRED      = "DisabledForLocalAddresses"
         PROWLARR__LOG__LEVEL          = "info"
       }
 
@@ -163,7 +164,8 @@ job "vpn" {
         # *arr environment variable configuration
         SONARR__SERVER__PORT        = "8989"
         SONARR__SERVER__BINDADDRESS = "*"
-        SONARR__AUTH__METHOD        = "None"
+        SONARR__AUTH__METHOD        = "External"
+        SONARR__AUTH__REQUIRED      = "DisabledForLocalAddresses"
         SONARR__LOG__LEVEL          = "info"
       }
 
@@ -217,7 +219,8 @@ job "vpn" {
         # *arr environment variable configuration
         RADARR__SERVER__PORT        = "7878"
         RADARR__SERVER__BINDADDRESS = "*"
-        RADARR__AUTH__METHOD        = "None"
+        RADARR__AUTH__METHOD        = "External"
+        RADARR__AUTH__REQUIRED      = "DisabledForLocalAddresses"
         RADARR__LOG__LEVEL          = "info"
       }
 
