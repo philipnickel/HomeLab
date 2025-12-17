@@ -140,9 +140,10 @@ job "vpn" {
       }
 
       env {
-        PUID = "1000"
-        PGID = "1000"
-        TZ   = "Europe/Copenhagen"
+        PUID           = "1000"
+        PGID           = "1000"
+        TZ             = "Europe/Copenhagen"
+        HOST_WHITELIST = "sabnzbd.kni.dk"
       }
 
       resources {
