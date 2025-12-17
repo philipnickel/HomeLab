@@ -7,7 +7,6 @@ Self-hosted media server stack on HashiCorp Nomad with VPN protection.
 ```
 ThinkPad Server (services pool)
 ├── Consul  (Service Discovery)
-├── Vault   (Secrets)
 ├── Nomad   (Orchestration)
 ├── Traefik (Reverse Proxy)
 ├── Gluetun + Arr Stack (VPN protected)
@@ -27,8 +26,7 @@ MacBook Client (compute pool)
 ```bash
 cd ansible
 
-# Bootstrap server (installs Consul, Vault, Nomad)
-# Vault is auto-initialized and unsealed
+# Bootstrap server (installs Consul, Nomad)
 make bootstrap
 
 # Setup MacBook as Nomad client
@@ -52,7 +50,6 @@ HomeLab/
 │       ├── group_vars/all.yml
 │       └── roles/
 │           ├── consul/
-│           ├── vault/
 │           ├── nomad/
 │           └── nomad_client/
 └── nomad_jobs/
@@ -67,9 +64,8 @@ HomeLab/
 
 | Service | URL |
 |---------|-----|
-| Consul | http://100.75.14.19:8500 |
-| Vault | http://100.75.14.19:8200 |
-| Nomad | http://100.75.14.19:4646 |
+| Nomad | http://nomad.kni.dk |
+| Consul | http://consul.kni.dk |
 | Traefik | http://traefik.kni.dk |
 | SABnzbd | http://sabnzbd.kni.dk |
 | Prowlarr | http://prowlarr.kni.dk |
@@ -82,7 +78,7 @@ HomeLab/
 ## Make Commands
 
 ```bash
-make bootstrap       # Setup server with Consul, Vault, Nomad
+make bootstrap       # Setup server with Consul, Nomad
 make client          # Setup MacBook as Nomad client
 make deploy          # Deploy all Nomad jobs
 make deploy-traefik  # Deploy Traefik only
@@ -93,14 +89,13 @@ make clean           # Stop all services on server
 
 ## Secrets
 
-Secrets are stored in Vault at `secret/vpn`:
-- `wireguard_private_key`: ProtonVPN WireGuard private key
-- `server_countries`: VPN server country (e.g., "Denmark")
+Secrets are stored in Nomad Variables at `nomad/jobs/vpn`:
+- `WIREGUARD_PRIVATE_KEY`: ProtonVPN WireGuard private key
+- `SERVER_COUNTRIES`: VPN server country (e.g., "Denmark")
 
 To add/update secrets:
 ```bash
-ssh homelab
-export VAULT_ADDR=http://127.0.0.1:8200
-export VAULT_TOKEN=<root-token-from-.vault-keys>
-vault kv put secret/vpn wireguard_private_key="your-key" server_countries="Denmark"
+nomad var put -force nomad/jobs/vpn \
+  WIREGUARD_PRIVATE_KEY="your-key" \
+  SERVER_COUNTRIES="Denmark"
 ```

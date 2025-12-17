@@ -6,10 +6,6 @@ region: home
 # Server address (Tailscale IP for clients to connect)
 nomad_server_addr: 100.75.14.19
 
-# Vault token for Nomad - read from .vault-keys file or environment
-# This is set automatically after Vault bootstrap
-vault_nomad_token: "{{ lookup('env', 'VAULT_NOMAD_TOKEN') | default('') }}"
-
 # Storage - Internal drive (server only)
 internal_volume_dir: /opt/nomad/volumes
 

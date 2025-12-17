@@ -90,10 +90,6 @@ job "traefik" {
               rule = "Host(`consul.kni.dk`)"
               service = "consul"
               entryPoints = ["web"]
-            [http.routers.vault]
-              rule = "Host(`vault.kni.dk`)"
-              service = "vault"
-              entryPoints = ["web"]
 
           [http.services]
             [http.services.nomad.loadBalancer]
@@ -102,9 +98,6 @@ job "traefik" {
             [http.services.consul.loadBalancer]
               [[http.services.consul.loadBalancer.servers]]
                 url = "http://127.0.0.1:8500"
-            [http.services.vault.loadBalancer]
-              [[http.services.vault.loadBalancer.servers]]
-                url = "http://127.0.0.1:8200"
         EOF
         destination = "local/dynamic.toml"
       }

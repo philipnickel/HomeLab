@@ -30,6 +30,5 @@ secrets/
 *.tfstate.*
 .terraform/
 
-# Vault keys (sensitive!)
-ansible/.vault-keys
-.vault-keys
+# Sensitive files
+*.secret

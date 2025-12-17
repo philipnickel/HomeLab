@@ -1,5 +1,5 @@
 ---
-# HomeLab Bootstrap - Consul, Vault, Nomad
+# HomeLab Bootstrap - Consul & Nomad
 # Prerequisite: Tailscale configured on target machine
 #
 # Usage: make bootstrap
@@ -49,7 +49,6 @@
 
   roles:
     - consul
-    - vault
     - nomad
 
   post_tasks:
@@ -57,14 +56,11 @@
       debug:
         msg: |
           Services running:
-            Consul: http://{{ ansible_default_ipv4.address }}:8500
-            Vault:  http://{{ ansible_default_ipv4.address }}:8200
-            Nomad:  http://{{ ansible_default_ipv4.address }}:4646
+            Consul: http://{{ tailscale_ip }}:8500
+            Nomad:  http://{{ tailscale_ip }}:4646
 
           Next steps:
-            1. Initialize Vault: vault operator init
-            2. Unseal Vault: vault operator unseal (3x)
-            3. Deploy jobs: make deploy
+            1. Deploy jobs: make deploy
 
 
 - name: Setup Nomad Client

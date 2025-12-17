@@ -3,7 +3,3 @@
 
 # Nomad (via Tailscale)
 export NOMAD_ADDR="http://100.75.14.19:4646"
-
-# Vault (via Tailscale)
-export VAULT_ADDR="http://100.75.14.19:8200"
-# export VAULT_TOKEN="your-root-token"
