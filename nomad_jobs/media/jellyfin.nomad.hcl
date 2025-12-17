@@ -1,20 +1,15 @@
 job "jellyfin" {
   datacenters = ["homelab"]
   type        = "service"
-
-  constraint {
-    attribute = "${meta.shared_mount}"
-    operator  = "="
-    value     = "true"
-  }
+  node_pool   = "services"
 
   group "jellyfin" {
     count = 1
 
     network {
       port "http" {
-        static       = 8096
-        host_network = "lan"
+        static = 8096
+        to     = 8096
       }
     }
 
@@ -43,8 +38,8 @@ job "jellyfin" {
         image = "jellyfin/jellyfin:latest"
         ports = ["http"]
         volumes = [
-          "/opt/nomad/config-volumes/jellyfin:/config",
-          "/opt/nomad/config-volumes/jellyfin/cache:/cache",
+          "/opt/nomad/volumes/config/jellyfin:/config",
+          "/opt/nomad/volumes/config/jellyfin/cache:/cache",
         ]
       }
 
@@ -55,7 +50,7 @@ job "jellyfin" {
       }
 
       env {
-        JELLYFIN_PublishedServerUrl = "http://jelly.kni.dk"
+        JELLYFIN_PublishedServerUrl = "http://jellyfin.kni.dk"
       }
 
       service {
@@ -63,7 +58,7 @@ job "jellyfin" {
         port = "http"
         tags = [
           "traefik.enable=true",
-          "traefik.http.routers.jellyfin.rule=Host(`jelly.kni.dk`)",
+          "traefik.http.routers.jellyfin.rule=Host(`jellyfin.kni.dk`)",
           "traefik.http.routers.jellyfin.entrypoints=web",
         ]
 

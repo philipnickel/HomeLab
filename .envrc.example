@@ -1,16 +1,9 @@
 # HomeLab Environment Variables
-# Copy this file to .envrc and fill in your values
-# Then run: source .envrc
+# Copy this file to .envrc and run: direnv allow
 
-# Nomad configuration
-export NOMAD_ADDR="http://192.168.0.39:4646"
+# Nomad (via Tailscale)
+export NOMAD_ADDR="http://100.75.14.19:4646"
 
-# Optional: If using remote deployment via Tailscale
-# export NOMAD_ADDR="http://100.x.x.x:4646"
-
-# Future: Vault secrets (when Vault is configured)
-# export VAULT_ADDR="http://192.168.0.39:8200"
-# export VAULT_TOKEN="your-vault-token"
-
-# Future: WireGuard key for VPN (when adding qBittorrent)
-# export NOMAD_VAR_wireguard_private_key="your-protonvpn-key"
+# Vault (via Tailscale)
+export VAULT_ADDR="http://100.75.14.19:8200"
+# export VAULT_TOKEN="your-root-token"

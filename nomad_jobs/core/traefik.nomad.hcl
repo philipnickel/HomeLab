@@ -57,6 +57,9 @@ job "traefik" {
             dashboard = true
             insecure = true
 
+          [ping]
+            entryPoint = "traefik"
+
           [providers]
             [providers.consulCatalog]
               prefix = "traefik"
