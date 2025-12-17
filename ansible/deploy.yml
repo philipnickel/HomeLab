@@ -21,6 +21,7 @@
       - core/jellyfin.nomad.hcl
       - core/jellyseerr.nomad.hcl
       - core/monitoring.nomad.hcl
+      - core/homarr.nomad.hcl
 
   tasks:
     - name: Clone or update HomeLab repo
