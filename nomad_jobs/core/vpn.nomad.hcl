@@ -29,10 +29,6 @@ job "vpn" {
         static = 6767
         to     = 6767
       }
-      port "jellyseerr" {
-        static = 5055
-        to     = 5055
-      }
     }
 
     volume "config" {
@@ -61,7 +57,7 @@ job "vpn" {
 
       config {
         image = "qmcgaw/gluetun:latest"
-        ports = ["sabnzbd", "prowlarr", "sonarr", "radarr", "bazarr", "jellyseerr"]
+        ports = ["sabnzbd", "prowlarr", "sonarr", "radarr", "bazarr"]
 
         cap_add = ["NET_ADMIN"]
         devices = [
@@ -87,7 +83,7 @@ job "vpn" {
           TZ=Europe/Copenhagen
           HTTPPROXY=off
           SHADOWSOCKS=off
-          FIREWALL_INPUT_PORTS=8082,9696,8989,7878,6767,5055
+          FIREWALL_INPUT_PORTS=8082,9696,8989,7878,6767
         EOF
         destination = "secrets/gluetun.env"
         env         = true
@@ -137,8 +133,7 @@ job "vpn" {
       }
 
       config {
-        image        = "linuxserver/sabnzbd:latest"
-        network_mode = "container:${NOMAD_ALLOC_ID}-gluetun"
+        image = "linuxserver/sabnzbd:latest"
         volumes = [
           "/nomad-config/sabnzbd:/config",
         ]
@@ -185,8 +180,7 @@ job "vpn" {
       }
 
       config {
-        image        = "linuxserver/prowlarr:latest"
-        network_mode = "container:${NOMAD_ALLOC_ID}-gluetun"
+        image = "linuxserver/prowlarr:latest"
         volumes = [
           "/opt/nomad/config-volumes/prowlarr:/config",
         ]
@@ -233,8 +227,7 @@ job "vpn" {
       }
 
       config {
-        image        = "linuxserver/sonarr:latest"
-        network_mode = "container:${NOMAD_ALLOC_ID}-gluetun"
+        image = "linuxserver/sonarr:latest"
         volumes = [
           "/opt/nomad/config-volumes/sonarr:/config",
           "/opt/nomad/downloads:/downloads",
@@ -283,8 +276,7 @@ job "vpn" {
       }
 
       config {
-        image        = "linuxserver/radarr:latest"
-        network_mode = "container:${NOMAD_ALLOC_ID}-gluetun"
+        image = "linuxserver/radarr:latest"
         volumes = [
           "/opt/nomad/config-volumes/radarr:/config",
           "/opt/nomad/downloads:/downloads",
@@ -333,8 +325,7 @@ job "vpn" {
       }
 
       config {
-        image        = "linuxserver/bazarr:latest"
-        network_mode = "container:${NOMAD_ALLOC_ID}-gluetun"
+        image = "linuxserver/bazarr:latest"
         volumes = [
           "/opt/nomad/config-volumes/bazarr:/config",
           "/media/t7/media:/media",
@@ -364,53 +355,6 @@ job "vpn" {
         check {
           type     = "http"
           path     = "/ping"
-          interval = "30s"
-          timeout  = "5s"
-        }
-      }
-    }
-
-    # ============================================
-    # JELLYSEERR - Media Requests
-    # ============================================
-    task "jellyseerr" {
-      driver = "docker"
-
-      lifecycle {
-        hook    = "poststart"
-        sidecar = true
-      }
-
-      config {
-        image        = "fallenbagel/jellyseerr:latest"
-        network_mode = "container:${NOMAD_ALLOC_ID}-gluetun"
-        volumes = [
-          "/opt/nomad/config-volumes/jellyseerr:/app/config",
-        ]
-      }
-
-      env {
-        TZ        = "Europe/Copenhagen"
-        LOG_LEVEL = "info"
-      }
-
-      resources {
-        cpu    = 500
-        memory = 512
-      }
-
-      service {
-        name = "jellyseerr"
-        port = "jellyseerr"
-        tags = [
-          "traefik.enable=true",
-          "traefik.http.routers.jellyseerr.rule=Host(`jellyseerr.kni.dk`)",
-          "traefik.http.routers.jellyseerr.entrypoints=web",
-        ]
-
-        check {
-          type     = "http"
-          path     = "/"
           interval = "30s"
           timeout  = "5s"
         }
