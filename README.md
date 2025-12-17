@@ -65,7 +65,7 @@ A self-hosted media server stack running on HashiCorp Nomad with VPN protection.
 HomeLab/
 ├── config/nomad/
 │   ├── thinkpad.hcl               # ThinkPad server + client
-│   └── macbook.hcl                # MacBook client (deploy only)
+│   └── macbook.hcl                # MacBook client
 └── nomad_jobs/
     ├── core/
     │   ├── traefik.nomad.hcl      # Reverse proxy

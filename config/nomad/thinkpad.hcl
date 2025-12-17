@@ -48,6 +48,7 @@ client {
 
   # Node metadata for job constraints
   meta {
+    node         = "thinkpad"
     shared_mount = "true"
   }
 

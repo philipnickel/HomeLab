@@ -3,7 +3,7 @@
 
 datacenter = "homelab"
 region     = "home"
-data_dir   = "/tmp/nomad-client"
+data_dir   = "/opt/nomad/data"
 
 # Client only (no server)
 server {
@@ -16,8 +16,31 @@ client {
   # Join ThinkPad server via Tailscale
   servers = ["100.75.14.19:4647"]
 
-  # Metadata to identify this machine
+  # Docker driver options
+  options = {
+    "docker.privileged.enabled" = "true"
+    "driver.raw_exec.enable"    = "1"
+    "docker.volumes.enabled"    = "true"
+  }
+
+  # Node metadata for job constraints
   meta {
-    role = "deploy"
+    node = "macbook"
+  }
+}
+
+# Docker plugin configuration
+plugin "docker" {
+  config {
+    allow_caps = [
+      "CHOWN", "DAC_OVERRIDE", "FSETID", "FOWNER", "MKNOD",
+      "NET_RAW", "SETGID", "SETUID", "SETFCAP", "SETPCAP",
+      "NET_BIND_SERVICE", "SYS_CHROOT", "KILL", "AUDIT_WRITE",
+      "NET_ADMIN"
+    ]
+    allow_privileged = true
+    volumes {
+      enabled = true
+    }
   }
 }
