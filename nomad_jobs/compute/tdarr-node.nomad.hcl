@@ -19,6 +19,7 @@ job "tdarr-node" {
 
         volumes = [
           "/tmp/tdarr-cache:/temp",
+          "/tmp/homelab-media/media:/media",
         ]
       }
 
