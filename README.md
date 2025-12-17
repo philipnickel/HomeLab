@@ -91,8 +91,24 @@ Configure these in your repository settings (Settings → Secrets and variables 
 
 | Secret | Description |
 |--------|-------------|
-| `NOMAD_ADDR` | Nomad server address (e.g., `http://192.168.0.39:4646`) |
+| `NOMAD_ADDR` | Nomad server Tailscale address (e.g., `http://100.75.14.19:4646`) |
 | `WIREGUARD_PRIVATE_KEY` | ProtonVPN WireGuard private key |
+| `TS_OAUTH_CLIENT_ID` | Tailscale OAuth client ID |
+| `TS_OAUTH_SECRET` | Tailscale OAuth client secret |
+
+#### Tailscale Setup
+
+The CI runners connect to your Nomad server via Tailscale. Create an OAuth client:
+
+1. Go to [Tailscale Admin Console](https://login.tailscale.com/admin/settings/oauth)
+2. Generate OAuth client with **Devices: Write** scope
+3. Add `tag:ci` to the tags
+4. Add this to your ACL policy:
+   ```json
+   "tagOwners": {
+     "tag:ci": ["autogroup:admin"]
+   }
+   ```
 
 #### Manual Deployment
 

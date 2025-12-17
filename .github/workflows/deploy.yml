@@ -50,6 +50,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Setup Tailscale
+        uses: tailscale/github-action@v2
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
+          tags: tag:ci
+
       - name: Setup Nomad
         uses: hashicorp/setup-nomad@main
 
@@ -61,7 +68,6 @@ jobs:
           EXIT_CODE=$?
           echo "$OUTPUT"
 
-          # Exit code 0 = no changes, 1 = changes pending, other = error
           if [ $EXIT_CODE -eq 0 ]; then
             echo "no_changes=true" >> $GITHUB_OUTPUT
           elif [ $EXIT_CODE -eq 1 ]; then
@@ -86,6 +92,13 @@ jobs:
       NOMAD_VAR_wireguard_private_key: ${{ secrets.WIREGUARD_PRIVATE_KEY }}
     steps:
       - uses: actions/checkout@v4
+
+      - name: Setup Tailscale
+        uses: tailscale/github-action@v2
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
+          tags: tag:ci
 
       - name: Setup Nomad
         uses: hashicorp/setup-nomad@main
@@ -120,6 +133,13 @@ jobs:
     if: github.event.inputs.job == 'all' || github.event.inputs.job == 'jellyfin' || github.event.inputs.job == ''
     steps:
       - uses: actions/checkout@v4
+
+      - name: Setup Tailscale
+        uses: tailscale/github-action@v2
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
+          tags: tag:ci
 
       - name: Setup Nomad
         uses: hashicorp/setup-nomad@main
