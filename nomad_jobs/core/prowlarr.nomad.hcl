@@ -3,37 +3,36 @@ job "prowlarr" {
   type        = "service"
   node_pool   = "services"
 
-  # Ensure prowlarr runs on same node as gluetun
-  constraint {
-    attribute = "${node.unique.id}"
-    operator  = "set_contains_any"
-    value     = "${attr.unique.hostname}"
-  }
-
   group "prowlarr" {
     count = 1
 
-    # Discover gluetun container and start prowlarr connected to it
     task "prowlarr" {
       driver = "raw_exec"
 
-      # First, discover the gluetun container name
+      # Use Consul template to discover gluetun container name
+      template {
+        data = <<-EOF
+          {{- range service "gluetun" }}
+          GLUETUN_CONTAINER={{ .ServiceMeta.container_name }}
+          {{- end }}
+        EOF
+        destination = "local/gluetun.env"
+        env         = true
+      }
+
       template {
         data = <<-EOF
           #!/bin/bash
           set -e
 
-          # Find gluetun container
-          GLUETUN_CONTAINER=$(docker ps --filter "name=gluetun-" --format "{{.Names}}" | head -1)
-
           if [ -z "$GLUETUN_CONTAINER" ]; then
-            echo "ERROR: Gluetun container not found!"
+            echo "ERROR: GLUETUN_CONTAINER not set - gluetun service not found in Consul"
             exit 1
           fi
 
           echo "Connecting to gluetun container: $GLUETUN_CONTAINER"
 
-          # Check if our container already exists and remove it
+          # Remove existing container if present
           docker rm -f prowlarr-vpn 2>/dev/null || true
 
           # Run prowlarr connected to gluetun's network
@@ -56,8 +55,7 @@ job "prowlarr" {
       }
 
       config {
-        command = "/bin/bash"
-        args    = ["local/start.sh"]
+        command = "local/start.sh"
       }
 
       resources {

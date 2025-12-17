@@ -27,6 +27,10 @@ job "gluetun" {
         static = 8082
         to     = 8082
       }
+      port "control" {
+        static = 8000
+        to     = 8000
+      }
     }
 
     task "gluetun" {
@@ -34,7 +38,7 @@ job "gluetun" {
 
       config {
         image = "qmcgaw/gluetun:latest"
-        ports = ["prowlarr", "sonarr", "radarr", "bazarr", "sabnzbd"]
+        ports = ["prowlarr", "sonarr", "radarr", "bazarr", "sabnzbd", "control"]
 
         cap_add = ["NET_ADMIN"]
         devices = [
@@ -60,7 +64,7 @@ job "gluetun" {
           TZ=Europe/Copenhagen
           HTTPPROXY=off
           SHADOWSOCKS=off
-          FIREWALL_INPUT_PORTS=9696,8989,7878,6767,8082
+          FIREWALL_INPUT_PORTS=9696,8989,7878,6767,8082,8000
         EOF
         destination = "secrets/gluetun.env"
         env         = true
@@ -71,14 +75,14 @@ job "gluetun" {
         memory = 256
       }
 
-      # Register with Consul - other services will discover this
+      # Register with Consul - store container name for discovery
       service {
         name = "gluetun"
-        port = "prowlarr"
+        port = "control"
 
-        # Store allocation info in meta for discovery
         meta {
-          alloc_id = "${NOMAD_ALLOC_ID}"
+          # Other services will use this to construct the container name
+          container_name = "gluetun-${NOMAD_ALLOC_ID}"
         }
 
         tags = [
@@ -86,7 +90,8 @@ job "gluetun" {
         ]
 
         check {
-          type     = "tcp"
+          type     = "http"
+          path     = "/"
           interval = "10s"
           timeout  = "3s"
         }

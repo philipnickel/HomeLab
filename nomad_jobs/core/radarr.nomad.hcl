@@ -9,25 +9,30 @@ job "radarr" {
     task "radarr" {
       driver = "raw_exec"
 
+      # Use Consul template to discover gluetun container name
+      template {
+        data = <<-EOF
+          {{- range service "gluetun" }}
+          GLUETUN_CONTAINER={{ .ServiceMeta.container_name }}
+          {{- end }}
+        EOF
+        destination = "local/gluetun.env"
+        env         = true
+      }
+
       template {
         data = <<-EOF
           #!/bin/bash
           set -e
 
-          # Find gluetun container
-          GLUETUN_CONTAINER=$(docker ps --filter "name=gluetun-" --format "{{.Names}}" | head -1)
-
           if [ -z "$GLUETUN_CONTAINER" ]; then
-            echo "ERROR: Gluetun container not found!"
+            echo "ERROR: GLUETUN_CONTAINER not set - gluetun service not found in Consul"
             exit 1
           fi
 
           echo "Connecting to gluetun container: $GLUETUN_CONTAINER"
-
-          # Remove existing container if present
           docker rm -f radarr-vpn 2>/dev/null || true
 
-          # Run radarr connected to gluetun's network
           exec docker run --rm \
             --name radarr-vpn \
             --network "container:$GLUETUN_CONTAINER" \
@@ -49,8 +54,7 @@ job "radarr" {
       }
 
       config {
-        command = "/bin/bash"
-        args    = ["local/start.sh"]
+        command = "local/start.sh"
       }
 
       resources {
