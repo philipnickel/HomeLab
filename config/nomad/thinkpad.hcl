@@ -1,5 +1,5 @@
-# Nomad Configuration for HomeLab
-# Copy to /etc/nomad.d/nomad.hcl on the server
+# ThinkPad Server Configuration
+# Copy to /etc/nomad.d/nomad.hcl
 
 datacenter = "homelab"
 data_dir   = "/opt/nomad/data"

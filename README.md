@@ -63,11 +63,9 @@ A self-hosted media server stack running on HashiCorp Nomad with VPN protection.
 
 ```
 HomeLab/
-├── config/
-│   ├── nomad/
-│   │   └── nomad.hcl              # ThinkPad server config
-│   └── nomad-client/
-│       └── nomad.hcl              # Mac client config (deploy only)
+├── config/nomad/
+│   ├── thinkpad.hcl               # ThinkPad server + client
+│   └── macbook.hcl                # MacBook client (deploy only)
 └── nomad_jobs/
     ├── core/
     │   ├── traefik.nomad.hcl      # Reverse proxy
@@ -83,7 +81,7 @@ HomeLab/
 Join the cluster as a client to deploy jobs:
 
 ```bash
-sudo nomad agent -config=config/nomad-client/nomad.hcl
+sudo nomad agent -config=config/nomad/macbook.hcl
 ```
 
 ### Deploy Jobs
@@ -111,11 +109,11 @@ nomad job stop -purge vpn  # Also removes history
 
 ## Server Setup
 
-Copy the Nomad config to your server:
+Copy the Nomad config to the ThinkPad:
 
 ```bash
-scp config/nomad/nomad.hcl homelab:/tmp/
-ssh homelab "sudo cp /tmp/nomad.hcl /etc/nomad.d/nomad.hcl && sudo systemctl restart nomad"
+scp config/nomad/thinkpad.hcl homelab:/tmp/
+ssh homelab "sudo cp /tmp/thinkpad.hcl /etc/nomad.d/nomad.hcl && sudo systemctl restart nomad"
 ```
 
 ## Monitoring
