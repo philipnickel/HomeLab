@@ -24,8 +24,8 @@ job "gluetun" {
         to     = 6767
       }
       port "sabnzbd" {
-        static = 8080
-        to     = 8080
+        static = 8082
+        to     = 8082
       }
     }
 
@@ -60,7 +60,7 @@ job "gluetun" {
           TZ=Europe/Copenhagen
           HTTPPROXY=off
           SHADOWSOCKS=off
-          FIREWALL_INPUT_PORTS=9696,8989,7878,6767,8080
+          FIREWALL_INPUT_PORTS=9696,8989,7878,6767,8082
         EOF
         destination = "secrets/gluetun.env"
         env         = true
