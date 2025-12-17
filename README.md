@@ -27,7 +27,7 @@ MacBook Client (compute pool)
 | Service | URL | Description |
 |---------|-----|-------------|
 | **Dashboard** |||
-| Homarr | http://kni.dk | Landing Page / Dashboard |
+| Homepage | http://kni.dk | Landing Page / Dashboard |
 | **Infrastructure** |||
 | Nomad | http://100.75.14.19:4646 | Orchestration |
 | Consul | http://100.75.14.19:8500 | Service Discovery |
@@ -91,7 +91,7 @@ HomeLab/
         ├── jellyfin.nomad.hcl
         ├── jellyseerr.nomad.hcl
         ├── monitoring.nomad.hcl
-        └── homarr.nomad.hcl
+        └── homepage.nomad.hcl
 ```
 
 ## Make Commands
@@ -111,19 +111,11 @@ Secrets are stored in Nomad Variables:
 - `WIREGUARD_PRIVATE_KEY`: ProtonVPN WireGuard private key
 - `SERVER_COUNTRIES`: VPN server country (e.g., "Denmark")
 
-**Homarr secrets** at `nomad/jobs/homarr`:
-- `SECRET_ENCRYPTION_KEY`: 64-character hex string for encryption
-
 To add/update secrets:
 ```bash
-# VPN secrets
 nomad var put -force nomad/jobs/vpn \
   WIREGUARD_PRIVATE_KEY="your-key" \
   SERVER_COUNTRIES="Denmark"
-
-# Homarr secret (generate with: openssl rand -hex 32)
-nomad var put -force nomad/jobs/homarr \
-  SECRET_ENCRYPTION_KEY="$(openssl rand -hex 32)"
 ```
 
 ## Data Paths
