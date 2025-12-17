@@ -6,15 +6,44 @@ Self-hosted media server stack on HashiCorp Nomad with VPN protection.
 
 ```
 ThinkPad Server (services pool)
-├── Consul  (Service Discovery)
-├── Nomad   (Orchestration)
-├── Traefik (Reverse Proxy)
-├── Gluetun + Arr Stack (VPN protected)
-└── Jellyfin (Streaming)
+├── Consul    (Service Discovery)
+├── Nomad     (Orchestration)
+├── Traefik   (Reverse Proxy)
+│
+├── arr-stack (VPN: Gluetun + Prowlarr + Sonarr + Radarr + Bazarr)
+├── downloaders (VPN: Gluetun + SABnzbd + qBittorrent)
+│
+├── Jellyfin   (Media Streaming)
+├── Jellyseerr (Request Management)
+│
+└── monitoring (Prometheus + Grafana + Node Exporter)
 
 MacBook Client (compute pool)
 └── Nomad Client
 ```
+
+## Services
+
+| Service | URL | Description |
+|---------|-----|-------------|
+| **Infrastructure** |||
+| Nomad | http://100.75.14.19:4646 | Orchestration |
+| Consul | http://100.75.14.19:8500 | Service Discovery |
+| Traefik | http://100.75.14.19:8080 | Reverse Proxy Dashboard |
+| **Arr Stack** (VPN Protected) |||
+| Prowlarr | http://prowlarr.kni.dk | Indexer Manager |
+| Sonarr | http://sonarr.kni.dk | TV Shows |
+| Radarr | http://radarr.kni.dk | Movies |
+| Bazarr | http://bazarr.kni.dk | Subtitles |
+| **Downloaders** (VPN Protected) |||
+| SABnzbd | http://sabnzbd.kni.dk | Usenet Downloader |
+| qBittorrent | http://qbittorrent.kni.dk | Torrent Client |
+| **Media** |||
+| Jellyfin | http://jellyfin.kni.dk | Media Server |
+| Jellyseerr | http://jellyseerr.kni.dk | Request Management |
+| **Monitoring** |||
+| Prometheus | http://prometheus.kni.dk | Metrics Collection |
+| Grafana | http://grafana.kni.dk | Dashboards |
 
 ## Prerequisites
 
@@ -53,27 +82,14 @@ HomeLab/
 │           ├── nomad/
 │           └── nomad_client/
 └── nomad_jobs/
-    ├── core/
-    │   ├── traefik.nomad.hcl
-    │   └── vpn.nomad.hcl
-    └── media/
-        └── jellyfin.nomad.hcl
+    └── core/
+        ├── traefik.nomad.hcl
+        ├── arr-stack.nomad.hcl
+        ├── downloaders.nomad.hcl
+        ├── jellyfin.nomad.hcl
+        ├── jellyseerr.nomad.hcl
+        └── monitoring.nomad.hcl
 ```
-
-## Services
-
-| Service | URL |
-|---------|-----|
-| Nomad | http://nomad.kni.dk |
-| Consul | http://consul.kni.dk |
-| Traefik | http://traefik.kni.dk |
-| SABnzbd | http://sabnzbd.kni.dk |
-| Prowlarr | http://prowlarr.kni.dk |
-| Sonarr | http://sonarr.kni.dk |
-| Radarr | http://radarr.kni.dk |
-| Bazarr | http://bazarr.kni.dk |
-| Jellyseerr | http://jellyseerr.kni.dk |
-| Jellyfin | http://jellyfin.kni.dk |
 
 ## Make Commands
 
@@ -81,9 +97,6 @@ HomeLab/
 make bootstrap       # Setup server with Consul, Nomad
 make client          # Setup MacBook as Nomad client
 make deploy          # Deploy all Nomad jobs
-make deploy-traefik  # Deploy Traefik only
-make deploy-vpn      # Deploy VPN stack only
-make deploy-jellyfin # Deploy Jellyfin only
 make clean           # Stop all services on server
 ```
 
@@ -99,3 +112,11 @@ nomad var put -force nomad/jobs/vpn \
   WIREGUARD_PRIVATE_KEY="your-key" \
   SERVER_COUNTRIES="Denmark"
 ```
+
+## Data Paths
+
+| Path | Purpose |
+|------|---------|
+| `/opt/nomad/config-volumes/{service}` | Service configurations |
+| `/opt/nomad/downloads` | Download directory |
+| `/media/t7/media` | Media storage |
