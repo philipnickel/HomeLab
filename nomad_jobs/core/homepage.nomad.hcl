@@ -22,6 +22,7 @@ job "homepage" {
 
         volumes = [
           "/opt/nomad/config-volumes/homepage:/app/config",
+          "/media/t7:/media/t7:ro",
         ]
       }
 
