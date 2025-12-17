@@ -7,31 +7,38 @@ job "homarr" {
     count = 1
 
     network {
-      port "http" { static = 7575 }
+      port "http" {
+        static = 7575
+        to     = 7575
+      }
     }
 
     task "homarr" {
       driver = "docker"
 
       config {
-        image = "ghcr.io/ajnart/homarr:latest"
+        image = "ghcr.io/homarr-labs/homarr:latest"
         ports = ["http"]
 
         volumes = [
-          "/opt/nomad/config-volumes/homarr/configs:/app/data/configs",
-          "/opt/nomad/config-volumes/homarr/icons:/app/public/icons",
-          "/opt/nomad/config-volumes/homarr/data:/data",
-          "/var/run/docker.sock:/var/run/docker.sock:ro",
+          "/opt/nomad/config-volumes/homarr:/appdata",
         ]
       }
 
-      env {
-        TZ = "Europe/Copenhagen"
+      template {
+        data = <<-EOF
+          {{ with nomadVar "nomad/jobs/homarr" }}
+          SECRET_ENCRYPTION_KEY={{ .SECRET_ENCRYPTION_KEY }}
+          {{ end }}
+          TZ=Europe/Copenhagen
+        EOF
+        destination = "secrets/homarr.env"
+        env         = true
       }
 
       resources {
-        cpu    = 200
-        memory = 256
+        cpu    = 500
+        memory = 1024
       }
     }
 
@@ -41,13 +48,12 @@ job "homarr" {
 
       tags = [
         "traefik.enable=true",
-        "traefik.http.routers.homarr.rule=Host(`kni.dk`) || Host(`homarr.kni.dk`)",
+        "traefik.http.routers.homarr.rule=Host(`homarr.kni.dk`)",
         "traefik.http.routers.homarr.entrypoints=web",
       ]
 
       check {
-        type     = "http"
-        path     = "/"
+        type     = "tcp"
         interval = "30s"
         timeout  = "5s"
       }
