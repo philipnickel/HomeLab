@@ -1,0 +1,57 @@
+---
+- name: Install Nomad
+  apt:
+    name: nomad
+    state: present
+    update_cache: true
+
+- name: Create data directory
+  file:
+    path: /opt/nomad/data
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Create config directory
+  file:
+    path: /etc/nomad.d
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Deploy Nomad config
+  template:
+    src: nomad.hcl.j2
+    dest: /etc/nomad.d/nomad.hcl
+    owner: root
+    group: root
+    mode: '0644'
+  notify: restart nomad
+
+- name: Create systemd service
+  template:
+    src: nomad.service.j2
+    dest: /etc/systemd/system/nomad.service
+    mode: '0644'
+  notify: restart nomad
+
+- name: Start and enable Nomad
+  systemd:
+    name: nomad
+    state: started
+    enabled: true
+    daemon_reload: true
+  async: 10
+  poll: 0
+
+- name: Wait for Nomad to be ready
+  uri:
+    url: "http://127.0.0.1:4646/v1/status/leader"
+    method: GET
+    status_code: 200
+  register: nomad_leader
+  until: nomad_leader.status == 200 and nomad_leader.json != '""'
+  retries: 30
+  delay: 2

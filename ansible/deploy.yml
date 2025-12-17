@@ -1,0 +1,60 @@
+---
+# Deploy Nomad jobs from git repo on server
+# Usage:
+#   make deploy           # Deploy all jobs
+#   make deploy-traefik   # Deploy specific job
+
+- name: Deploy Nomad Jobs
+  hosts: servers
+  become: false
+
+  vars:
+    nomad_addr: "http://127.0.0.1:4646"
+    repo_url: "https://github.com/philipnickel/HomeLab.git"
+    repo_dir: "/home/{{ ansible_user }}/HomeLab"
+
+    # Default: deploy all jobs
+    jobs_to_deploy:
+      - core/traefik.nomad.hcl
+      - core/vpn.nomad.hcl
+      - media/jellyfin.nomad.hcl
+
+  tasks:
+    - name: Clone or update HomeLab repo
+      git:
+        repo: "{{ repo_url }}"
+        dest: "{{ repo_dir }}"
+        version: main
+        force: yes
+
+    - name: Wait for Nomad to be ready
+      uri:
+        url: "{{ nomad_addr }}/v1/status/leader"
+        method: GET
+        status_code: 200
+      register: nomad_leader
+      until: nomad_leader.status == 200 and nomad_leader.json != '""'
+      retries: 30
+      delay: 2
+
+    - name: Deploy jobs
+      command: nomad job run "{{ repo_dir }}/nomad_jobs/{{ item }}"
+      environment:
+        NOMAD_ADDR: "{{ nomad_addr }}"
+      loop: "{{ deploy_jobs | default(jobs_to_deploy) }}"
+      register: job_results
+
+    - name: Show results
+      debug:
+        msg: "{{ item.item }}: {{ 'OK' if item.rc == 0 else 'FAILED' }}"
+      loop: "{{ job_results.results }}"
+      loop_control:
+        label: "{{ item.item }}"
+
+    - name: Show service URLs
+      debug:
+        msg: |
+          Services:
+            Traefik Dashboard: http://{{ tailscale_ip }}:8080
+            Consul: http://{{ tailscale_ip }}:8500
+            Nomad: http://{{ tailscale_ip }}:4646

@@ -1,22 +1,20 @@
 job "traefik" {
   datacenters = ["homelab"]
   type        = "service"
+  node_pool   = "services"
 
   group "traefik" {
     count = 1
 
     network {
       port "http" {
-        static       = 80
-        host_network = "lan"
+        static = 80
       }
       port "https" {
-        static       = 443
-        host_network = "lan"
+        static = 443
       }
       port "dashboard" {
-        static       = 8080
-        host_network = "lan"
+        static = 8080
       }
     }
 

@@ -1,0 +1,19 @@
+[Unit]
+Description=Nomad
+Documentation=https://www.nomadproject.io/
+Wants=network-online.target
+After=network-online.target consul.service vault.service
+
+[Service]
+ExecStart=/usr/bin/nomad agent -config=/etc/nomad.d/
+ExecReload=/bin/kill --signal HUP $MAINPID
+KillMode=process
+KillSignal=SIGINT
+Restart=on-failure
+LimitNOFILE=65536
+LimitNPROC=infinity
+TasksMax=infinity
+OOMScoreAdjust=-1000
+
+[Install]
+WantedBy=multi-user.target

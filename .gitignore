@@ -29,3 +29,9 @@ secrets/
 *.tfstate
 *.tfstate.*
 .terraform/
+
+# Ansible Galaxy roles (installed via make deps)
+ansible/bootstrap/roles/
+
+# Vault keys (sensitive!)
+.vault-keys

@@ -1,0 +1,63 @@
+datacenter = "{{ datacenter }}"
+region     = "{{ region }}"
+data_dir   = "/opt/nomad/data"
+bind_addr  = "0.0.0.0"
+
+advertise {
+  http = "{{ tailscale_ip }}"
+  rpc  = "{{ tailscale_ip }}"
+  serf = "{{ tailscale_ip }}"
+}
+
+server {
+  enabled          = true
+  bootstrap_expect = 1
+}
+
+client {
+  enabled   = true
+  node_pool = "services"
+
+  # Internal drive - app configs and temp storage
+  host_volume "config" {
+    path      = "{{ internal_volume_dir }}/config"
+    read_only = false
+  }
+
+  host_volume "downloads" {
+    path      = "{{ internal_volume_dir }}/downloads"
+    read_only = false
+  }
+
+  # External T7 SSD - persistent media storage
+  host_volume "media" {
+    path      = "{{ external_t7_dir }}/media"
+    read_only = false
+  }
+}
+
+plugin "docker" {
+  config {
+    allow_privileged = true
+    volumes {
+      enabled = true
+    }
+  }
+}
+
+plugin "raw_exec" {
+  config {
+    enabled = true
+  }
+}
+
+consul {
+  address = "127.0.0.1:8500"
+}
+
+vault {
+  enabled       = true
+  address       = "http://127.0.0.1:8200"
+  token         = "{{ vault_nomad_token }}"
+  create_from_role = "nomad-cluster"
+}

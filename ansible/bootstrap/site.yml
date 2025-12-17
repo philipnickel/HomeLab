@@ -1,0 +1,79 @@
+---
+# HomeLab Bootstrap - Consul, Vault, Nomad
+# Prerequisite: Tailscale configured on target machine
+#
+# Usage: make bootstrap
+
+- name: Setup HomeLab Server
+  hosts: servers
+  become: true
+
+  pre_tasks:
+    - name: Verify Tailscale is running
+      command: tailscale status
+      changed_when: false
+
+    - name: Add HashiCorp GPG key
+      apt_key:
+        url: https://apt.releases.hashicorp.com/gpg
+        state: present
+
+    - name: Add HashiCorp repository
+      apt_repository:
+        repo: "deb https://apt.releases.hashicorp.com {{ ansible_distribution_release }} main"
+        state: present
+
+    - name: Install required packages
+      apt:
+        name:
+          - curl
+          - unzip
+          - jq
+        state: present
+        update_cache: true
+
+    - name: Create internal storage directories
+      file:
+        path: "{{ item }}"
+        state: directory
+        mode: '0755'
+      loop:
+        - "{{ internal_volume_dir }}/config"
+        - "{{ internal_volume_dir }}/downloads"
+
+    - name: Create external storage directories
+      file:
+        path: "{{ external_t7_dir }}/media"
+        state: directory
+        mode: '0755'
+
+  roles:
+    - consul
+    - vault
+    - nomad
+
+  post_tasks:
+    - name: Show service URLs
+      debug:
+        msg: |
+          Services running:
+            Consul: http://{{ ansible_default_ipv4.address }}:8500
+            Vault:  http://{{ ansible_default_ipv4.address }}:8200
+            Nomad:  http://{{ ansible_default_ipv4.address }}:4646
+
+          Next steps:
+            1. Initialize Vault: vault operator init
+            2. Unseal Vault: vault operator unseal (3x)
+            3. Deploy jobs: make deploy
+
+
+- name: Setup Nomad Client
+  hosts: clients
+
+  pre_tasks:
+    - name: Verify Tailscale is running
+      command: tailscale status
+      changed_when: false
+
+  roles:
+    - nomad_client

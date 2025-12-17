@@ -1,12 +1,7 @@
 job "vpn" {
   datacenters = ["homelab"]
   type        = "service"
-
-  constraint {
-    attribute = "${meta.shared_mount}"
-    operator  = "="
-    value     = "true"
-  }
+  node_pool   = "services"
 
   group "vpn" {
     count = 1
@@ -38,11 +33,24 @@ job "vpn" {
         static = 5055
         to     = 5055
       }
-      # Future: uncomment when adding torrents
-      # port "qbittorrent" {
-      #   static = 8085
-      #   to     = 8085
-      # }
+    }
+
+    volume "config" {
+      type      = "host"
+      source    = "config"
+      read_only = false
+    }
+
+    volume "downloads" {
+      type      = "host"
+      source    = "downloads"
+      read_only = false
+    }
+
+    volume "media" {
+      type      = "host"
+      source    = "media"
+      read_only = false
     }
 
     # ============================================
@@ -68,12 +76,18 @@ job "vpn" {
         }
       }
 
+      vault {
+        policies = ["nomad-vpn"]
+      }
+
       template {
         data        = <<-EOF
+          {{ with secret "secret/data/vpn" }}
           VPN_SERVICE_PROVIDER=protonvpn
           VPN_TYPE=wireguard
-          WIREGUARD_PRIVATE_KEY={{ with nomadVar "nomad/jobs/vpn" }}{{ .wireguard_private_key }}{{ end }}
-          SERVER_COUNTRIES=Denmark
+          WIREGUARD_PRIVATE_KEY={{ .Data.data.wireguard_private_key }}
+          SERVER_COUNTRIES={{ .Data.data.server_countries }}
+          {{ end }}
           TZ=Europe/Copenhagen
           HTTPPROXY=off
           SHADOWSOCKS=off
@@ -111,13 +125,26 @@ job "vpn" {
         sidecar = true
       }
 
+      volume_mount {
+        volume      = "config"
+        destination = "/nomad-config"
+      }
+
+      volume_mount {
+        volume      = "downloads"
+        destination = "/downloads"
+      }
+
+      volume_mount {
+        volume      = "media"
+        destination = "/media"
+      }
+
       config {
         image        = "linuxserver/sabnzbd:latest"
         network_mode = "container:${NOMAD_ALLOC_ID}-gluetun"
         volumes = [
-          "/opt/nomad/config-volumes/sabnzbd:/config",
-          "/opt/nomad/downloads:/downloads",
-          "/media/t7/media:/media",
+          "/nomad-config/sabnzbd:/config",
         ]
       }
 

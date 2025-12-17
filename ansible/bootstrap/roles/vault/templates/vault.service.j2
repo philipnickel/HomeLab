@@ -1,0 +1,19 @@
+[Unit]
+Description=Vault
+Documentation=https://www.vaultproject.io/
+Requires=network-online.target
+After=network-online.target consul.service
+
+[Service]
+User=vault
+Group=vault
+ExecStart=/usr/bin/vault server -config=/etc/vault.d/vault.hcl
+ExecReload=/bin/kill --signal HUP $MAINPID
+KillMode=process
+KillSignal=SIGINT
+Restart=on-failure
+LimitNOFILE=65536
+LimitMEMLOCK=infinity
+
+[Install]
+WantedBy=multi-user.target

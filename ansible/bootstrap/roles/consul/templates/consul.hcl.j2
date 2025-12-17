@@ -1,0 +1,17 @@
+datacenter = "{{ datacenter }}"
+data_dir   = "/opt/consul/data"
+log_level  = "INFO"
+
+server           = true
+bootstrap_expect = 1
+
+bind_addr   = "{{ tailscale_ip }}"
+client_addr = "0.0.0.0"
+
+ui_config {
+  enabled = true
+}
+
+connect {
+  enabled = true
+}

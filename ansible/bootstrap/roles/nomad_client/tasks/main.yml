@@ -1,0 +1,44 @@
+---
+- name: Add HashiCorp tap (macOS)
+  homebrew_tap:
+    name: hashicorp/tap
+    state: present
+  when: ansible_os_family == "Darwin"
+
+- name: Install Nomad (macOS)
+  homebrew:
+    name: hashicorp/tap/nomad
+    state: present
+  when: ansible_os_family == "Darwin"
+
+- name: Install Nomad (Linux)
+  apt:
+    name: nomad
+    state: present
+    update_cache: true
+  when: ansible_os_family == "Debian"
+
+- name: Create config directory
+  file:
+    path: "{{ nomad_client_config_dir }}"
+    state: directory
+    mode: '0755'
+  become: true
+
+- name: Deploy Nomad client config
+  template:
+    src: nomad-client.hcl.j2
+    dest: "{{ nomad_client_config_dir }}/nomad.hcl"
+    mode: '0644'
+  become: true
+
+- name: Show how to start Nomad client
+  debug:
+    msg: |
+      Nomad client configured!
+
+      To start the client:
+        sudo nomad agent -config={{ nomad_client_config_dir }}/nomad.hcl
+
+      Or run in background:
+        sudo nomad agent -config={{ nomad_client_config_dir }}/nomad.hcl &

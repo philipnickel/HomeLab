@@ -1,0 +1,21 @@
+---
+# Datacenter
+datacenter: homelab
+region: home
+
+# Server address (Tailscale IP for clients to connect)
+nomad_server_addr: 100.75.14.19
+
+# Vault token for Nomad - read from .vault-keys file or environment
+# This is set automatically after Vault bootstrap
+vault_nomad_token: "{{ lookup('env', 'VAULT_NOMAD_TOKEN') | default('') }}"
+
+# Storage - Internal drive (server only)
+internal_volume_dir: /opt/nomad/volumes
+
+# Storage - External T7 SSD (server only)
+external_t7_dir: /media/t7
+
+# Client config paths
+nomad_client_config_dir: "{{ '/usr/local/etc/nomad.d' if ansible_os_family == 'Darwin' else '/etc/nomad.d' }}"
+nomad_client_data_dir: "{{ '/usr/local/var/nomad' if ansible_os_family == 'Darwin' else '/opt/nomad/data' }}"
