@@ -13,6 +13,15 @@ client {
   enabled   = true
   node_pool = "compute"
   servers   = ["{{ nomad_server_addr }}:4647"]
+{% if nomad_host_volumes is defined %}
+
+{% for volume in nomad_host_volumes %}
+  host_volume "{{ volume.name }}" {
+    path      = "{{ volume.path }}"
+    read_only = {{ volume.read_only | lower }}
+  }
+{% endfor %}
+{% endif %}
 }
 
 plugin "docker" {

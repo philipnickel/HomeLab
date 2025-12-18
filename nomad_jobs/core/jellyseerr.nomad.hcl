@@ -39,7 +39,7 @@ job "jellyseerr" {
         port = "http"
         tags = [
           "traefik.enable=true",
-          "traefik.http.routers.jellyseerr.rule=Host(`jellyseerr.kni.dk`)",
+          "traefik.http.routers.jellyseerr.rule=Host(`req.kni.dk`)",
           "traefik.http.routers.jellyseerr.entrypoints=web",
         ]
 

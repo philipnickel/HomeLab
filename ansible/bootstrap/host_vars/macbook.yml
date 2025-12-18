@@ -1,0 +1,19 @@
+---
+# MacBook-specific Nomad client configuration
+
+# Host volumes for MacBook
+nomad_host_volumes:
+  - name: media
+    path: /tmp/homelab-media/media
+    read_only: false
+  - name: fileflows-temp
+    path: /tmp/fileflows-node/temp
+    read_only: false
+  - name: fileflows-data
+    path: /tmp/fileflows-node/data
+    read_only: false
+
+# Directories to create before Nomad starts
+nomad_volume_dirs:
+  - /tmp/fileflows-node/temp
+  - /tmp/fileflows-node/data

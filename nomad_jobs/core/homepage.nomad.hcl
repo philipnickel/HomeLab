@@ -29,7 +29,7 @@ job "homepage" {
       env {
         PUID                   = "1000"
         PGID                   = "1000"
-        HOMEPAGE_ALLOWED_HOSTS = "homepage.kni.dk,kni.dk,192.168.0.39:3001"
+        HOMEPAGE_ALLOWED_HOSTS = "home.kni.dk,kni.dk,192.168.0.39:3001"
       }
 
       resources {
@@ -44,7 +44,7 @@ job "homepage" {
 
       tags = [
         "traefik.enable=true",
-        "traefik.http.routers.homepage.rule=Host(`homepage.kni.dk`) || Host(`kni.dk`)",
+        "traefik.http.routers.homepage.rule=Host(`home.kni.dk`) || Host(`kni.dk`)",
         "traefik.http.routers.homepage.entrypoints=web",
       ]
 

@@ -25,6 +25,14 @@
     mode: '0755'
   become: true
 
+- name: Create volume directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+  loop: "{{ nomad_volume_dirs | default([]) }}"
+  when: nomad_volume_dirs is defined
+
 - name: Deploy Nomad client config
   template:
     src: nomad-client.hcl.j2
