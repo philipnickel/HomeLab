@@ -1,0 +1,25 @@
+#!/bin/bash
+# Mount HomeLab media share via SMB
+
+MOUNT_POINT="{{ smb_mount_point }}"
+SMB_SERVER="{{ smb_server }}"
+SMB_SHARE="{{ smb_share }}"
+
+# Create mount point if it doesn't exist
+mkdir -p "$MOUNT_POINT"
+
+# Check if already mounted
+if mount | grep -q "$MOUNT_POINT"; then
+    echo "Already mounted at $MOUNT_POINT"
+    exit 0
+fi
+
+# Mount the SMB share (guest access)
+mount -t smbfs "//${SMB_SERVER}/${SMB_SHARE}" "$MOUNT_POINT"
+
+if [ $? -eq 0 ]; then
+    echo "Successfully mounted ${SMB_SERVER}/${SMB_SHARE} at $MOUNT_POINT"
+else
+    echo "Failed to mount SMB share"
+    exit 1
+fi

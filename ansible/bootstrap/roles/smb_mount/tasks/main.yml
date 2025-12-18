@@ -1,0 +1,54 @@
+---
+- name: Create mount point directory
+  file:
+    path: "{{ smb_mount_point }}"
+    state: directory
+    mode: '0755'
+
+- name: Create SMB credentials file (macOS)
+  template:
+    src: smb-credentials.j2
+    dest: "{{ ansible_env.HOME }}/.smb-credentials"
+    mode: '0600'
+  when: ansible_os_family == "Darwin"
+
+- name: Create local bin directory
+  file:
+    path: "{{ ansible_env.HOME }}/.local/bin"
+    state: directory
+    mode: '0755'
+  when: ansible_os_family == "Darwin"
+
+- name: Create mount script (macOS)
+  template:
+    src: mount-smb.sh.j2
+    dest: "{{ ansible_env.HOME }}/.local/bin/mount-homelab-media"
+    mode: '0755'
+  when: ansible_os_family == "Darwin"
+
+- name: Deploy LaunchAgent for SMB mount (macOS)
+  template:
+    src: smb-mount.plist.j2
+    dest: "{{ ansible_env.HOME }}/Library/LaunchAgents/com.homelab.smb-mount.plist"
+    mode: '0644'
+  when: ansible_os_family == "Darwin"
+
+- name: Load LaunchAgent (macOS)
+  command: launchctl load {{ ansible_env.HOME }}/Library/LaunchAgents/com.homelab.smb-mount.plist
+  when: ansible_os_family == "Darwin"
+  ignore_errors: true
+
+- name: Run mount script now
+  command: "{{ ansible_env.HOME }}/.local/bin/mount-homelab-media"
+  when: ansible_os_family == "Darwin"
+  ignore_errors: true
+
+- name: Verify mount
+  command: ls {{ smb_mount_point }}/media
+  register: mount_check
+  failed_when: false
+  changed_when: false
+
+- name: Display mount status
+  debug:
+    msg: "SMB mount {{ 'successful' if mount_check.rc == 0 else 'failed - run mount script manually' }}"

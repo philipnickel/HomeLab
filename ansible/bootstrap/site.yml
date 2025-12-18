@@ -72,4 +72,17 @@
       changed_when: false
 
   roles:
+    - smb_mount
     - nomad_client
+
+  post_tasks:
+    - name: Show client status
+      debug:
+        msg: |
+          Nomad client configured!
+
+          SMB mount: {{ smb_mount_point }}
+          Host volumes: {{ nomad_host_volumes | map(attribute='name') | list }}
+
+          To start/restart Nomad client:
+            brew services restart nomad
