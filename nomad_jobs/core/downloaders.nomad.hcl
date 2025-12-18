@@ -7,8 +7,9 @@ job "downloaders" {
     count = 1
 
     network {
-      port "sabnzbd"     { static = 8082 }
-      port "qbittorrent" { static = 8085 }
+      port "sabnzbd"         { static = 8082 }
+      port "qbittorrent"     { static = 8085 }
+      port "gluetun_control" { static = 8001 }
     }
 
     # Gluetun VPN - main task that owns the network
@@ -17,7 +18,7 @@ job "downloaders" {
 
       config {
         image   = "qmcgaw/gluetun:latest"
-        ports   = ["sabnzbd", "qbittorrent"]
+        ports   = ["sabnzbd", "qbittorrent", "gluetun_control"]
         cap_add = ["NET_ADMIN"]
 
         devices = [{
@@ -35,7 +36,8 @@ job "downloaders" {
           SERVER_COUNTRIES={{ .SERVER_COUNTRIES }}
           {{ end }}
           TZ=Europe/Copenhagen
-          FIREWALL_INPUT_PORTS=8082,8085
+          FIREWALL_INPUT_PORTS=8082,8085,8001
+          HTTP_CONTROL_SERVER_ADDRESS=:8001
         EOF
         destination = "secrets/gluetun.env"
         env         = true

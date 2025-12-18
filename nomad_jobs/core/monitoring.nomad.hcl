@@ -70,18 +70,23 @@ job "monitoring" {
               static_configs:
                 - targets: ['localhost:9090']
 
-            # Node Exporter - host metrics
+            # Node Exporter - ThinkPad (services)
             - job_name: 'node'
               static_configs:
                 - targets: ['{{ env "attr.unique.network.ip-address" }}:9100']
+                  labels:
+                    node: 'thinkpad'
+                    pool: 'services'
 
-            # Nomad metrics
+            # Nomad server metrics
             - job_name: 'nomad'
               metrics_path: /v1/metrics
               params:
                 format: ['prometheus']
               static_configs:
                 - targets: ['{{ env "attr.unique.network.ip-address" }}:4646']
+                  labels:
+                    node: 'thinkpad'
 
             # Consul metrics
             - job_name: 'consul'
@@ -93,6 +98,7 @@ job "monitoring" {
 
             # Traefik metrics
             - job_name: 'traefik'
+              metrics_path: /metrics
               static_configs:
                 - targets: ['{{ env "attr.unique.network.ip-address" }}:8080']
         EOF
@@ -116,6 +122,8 @@ job "monitoring" {
         volumes = [
           "/opt/nomad/config-volumes/grafana:/var/lib/grafana",
           "local/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml:ro",
+          "local/dashboards.yml:/etc/grafana/provisioning/dashboards/dashboards.yml:ro",
+          "local/dashboards:/var/lib/grafana/dashboards:ro",
         ]
       }
 
@@ -131,6 +139,105 @@ job "monitoring" {
               editable: false
         EOF
         destination = "local/datasources.yml"
+      }
+
+      template {
+        data = <<-EOF
+          apiVersion: 1
+          providers:
+            - name: 'HomeLab'
+              orgId: 1
+              folder: 'HomeLab'
+              type: file
+              disableDeletion: false
+              editable: true
+              options:
+                path: /var/lib/grafana/dashboards
+        EOF
+        destination = "local/dashboards.yml"
+      }
+
+      # Nomad Cluster Dashboard
+      template {
+        data = <<-EOF
+{
+  "annotations": {"list": []},
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "links": [],
+  "panels": [
+    {
+      "gridPos": {"h": 4, "w": 6, "x": 0, "y": 0},
+      "id": 1,
+      "options": {"colorMode": "value", "graphMode": "none", "justifyMode": "auto", "orientation": "auto", "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}, "textMode": "auto"},
+      "targets": [{"expr": "count(nomad_client_uptime)", "refId": "A"}],
+      "title": "Nodes Online",
+      "type": "stat"
+    },
+    {
+      "gridPos": {"h": 4, "w": 6, "x": 6, "y": 0},
+      "id": 2,
+      "options": {"colorMode": "value", "graphMode": "none", "justifyMode": "auto", "orientation": "auto", "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}, "textMode": "auto"},
+      "targets": [{"expr": "nomad_nomad_job_summary_running", "refId": "A"}],
+      "title": "Running Jobs",
+      "type": "stat"
+    },
+    {
+      "gridPos": {"h": 4, "w": 6, "x": 12, "y": 0},
+      "id": 3,
+      "options": {"colorMode": "value", "graphMode": "none", "justifyMode": "auto", "orientation": "auto", "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}, "textMode": "auto"},
+      "targets": [{"expr": "sum(nomad_client_allocs_running)", "refId": "A"}],
+      "title": "Running Allocations",
+      "type": "stat"
+    },
+    {
+      "gridPos": {"h": 4, "w": 6, "x": 18, "y": 0},
+      "id": 4,
+      "options": {"colorMode": "value", "graphMode": "none", "justifyMode": "auto", "orientation": "auto", "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}, "textMode": "auto"},
+      "targets": [{"expr": "sum(nomad_client_allocs_terminal{terminal_state=\"failed\"})", "refId": "A"}],
+      "title": "Failed Allocations",
+      "type": "stat"
+    },
+    {
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 4},
+      "id": 5,
+      "options": {"legend": {"calcs": [], "displayMode": "list", "placement": "bottom"}},
+      "targets": [{"expr": "100 - (avg(rate(node_cpu_seconds_total{mode=\"idle\"}[5m])) by (node) * 100)", "legendFormat": "{{node}}", "refId": "A"}],
+      "title": "CPU Usage by Node",
+      "type": "timeseries"
+    },
+    {
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 4},
+      "id": 6,
+      "options": {"legend": {"calcs": [], "displayMode": "list", "placement": "bottom"}},
+      "targets": [{"expr": "(1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100", "legendFormat": "{{node}}", "refId": "A"}],
+      "title": "Memory Usage by Node",
+      "type": "timeseries"
+    },
+    {
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 12},
+      "id": 7,
+      "options": {"legend": {"calcs": [], "displayMode": "list", "placement": "bottom"}},
+      "targets": [{"expr": "rate(node_network_receive_bytes_total{device=\"eth0\"}[5m])", "legendFormat": "{{node}} RX", "refId": "A"}, {"expr": "rate(node_network_transmit_bytes_total{device=\"eth0\"}[5m])", "legendFormat": "{{node}} TX", "refId": "B"}],
+      "title": "Network Traffic",
+      "type": "timeseries"
+    },
+    {
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 12},
+      "id": 8,
+      "options": {"legend": {"calcs": [], "displayMode": "list", "placement": "bottom"}},
+      "targets": [{"expr": "(1 - (node_filesystem_avail_bytes{mountpoint=\"/\"} / node_filesystem_size_bytes{mountpoint=\"/\"})) * 100", "legendFormat": "{{node}} /", "refId": "A"}],
+      "title": "Disk Usage",
+      "type": "timeseries"
+    }
+  ],
+  "schemaVersion": 39,
+  "title": "HomeLab Cluster",
+  "uid": "homelab-cluster"
+}
+        EOF
+        destination = "local/dashboards/cluster.json"
       }
 
       env {

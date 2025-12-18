@@ -7,10 +7,11 @@ job "arr-stack" {
     count = 1
 
     network {
-      port "prowlarr" { static = 9696 }
-      port "sonarr"   { static = 8989 }
-      port "radarr"   { static = 7878 }
-      port "bazarr"   { static = 6767 }
+      port "prowlarr"        { static = 9696 }
+      port "sonarr"          { static = 8989 }
+      port "radarr"          { static = 7878 }
+      port "bazarr"          { static = 6767 }
+      port "gluetun_control" { static = 8000 }
     }
 
     # Gluetun VPN - main task that owns the network
@@ -19,7 +20,7 @@ job "arr-stack" {
 
       config {
         image   = "qmcgaw/gluetun:latest"
-        ports   = ["prowlarr", "sonarr", "radarr", "bazarr"]
+        ports   = ["prowlarr", "sonarr", "radarr", "bazarr", "gluetun_control"]
         cap_add = ["NET_ADMIN"]
 
         devices = [{
@@ -37,8 +38,9 @@ job "arr-stack" {
           SERVER_COUNTRIES={{ .SERVER_COUNTRIES }}
           {{ end }}
           TZ=Europe/Copenhagen
-          FIREWALL_INPUT_PORTS=9696,8989,7878,6767
+          FIREWALL_INPUT_PORTS=9696,8989,7878,6767,8000
           FIREWALL_OUTBOUND_SUBNETS=192.168.0.0/24
+          HTTP_CONTROL_SERVER_ADDRESS=:8000
         EOF
         destination = "secrets/gluetun.env"
         env         = true

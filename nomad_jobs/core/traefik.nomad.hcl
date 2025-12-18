@@ -70,6 +70,13 @@ job "traefik" {
             [providers.file]
               filename = "/local/dynamic.toml"
 
+          [metrics]
+            [metrics.prometheus]
+              entryPoint = "traefik"
+              addEntryPointsLabels = true
+              addServicesLabels = true
+              addRoutersLabels = true
+
           [log]
             level = "INFO"
 
