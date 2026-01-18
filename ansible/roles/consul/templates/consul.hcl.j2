@@ -1,0 +1,46 @@
+datacenter = "{{ datacenter }}"
+data_dir   = "/opt/consul/data"
+log_level  = "INFO"
+
+# Server or agent mode
+{% if consul_server | default(false) %}
+server           = true
+bootstrap_expect = {{ consul_bootstrap_expect | default(1) }}
+{% else %}
+server = false
+{% endif %}
+
+# Network binding
+bind_addr   = "{{ ansible_default_ipv4.address }}"
+client_addr = "0.0.0.0"
+
+# Retry join for agents
+{% if consul_retry_join is defined and consul_retry_join | length > 0 %}
+retry_join = {{ consul_retry_join | to_json }}
+{% endif %}
+
+# UI config
+ui_config {
+  enabled = true
+}
+
+# Enable Connect (service mesh)
+connect {
+  enabled = true
+}
+
+# DNS configuration for service discovery
+ports {
+  dns = 8600
+}
+
+dns_config {
+  allow_stale = true
+  max_stale   = "87600h"
+}
+
+# Service definitions
+services {
+  name = "consul"
+  tags = ["infrastructure"]
+}

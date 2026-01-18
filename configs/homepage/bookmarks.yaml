@@ -1,0 +1,8 @@
+---
+- External:
+    - GitHub:
+        - icon: github.png
+          href: https://github.com
+    - CloudFlare:
+        - icon: cloudflare.png
+          href: https://dash.cloudflare.com

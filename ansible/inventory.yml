@@ -1,0 +1,27 @@
+---
+all:
+  children:
+    nomad_servers:
+      hosts:
+        nomad-server:
+          ansible_host: 192.168.0.200
+          ansible_user: root
+          consul_server: true
+          nomad_server: true
+
+    nomad_clients:
+      hosts:
+        nomad-client:
+          ansible_host: 192.168.0.201
+          ansible_user: root
+          consul_server: false
+          nomad_server: false
+
+    # OpenMediaVault - will be provisioned later
+    # nas:
+    #   hosts:
+    #     openmediavault:
+    #       ansible_host: 192.168.0.202
+
+  vars:
+    ansible_python_interpreter: /usr/bin/python3

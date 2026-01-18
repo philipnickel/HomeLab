@@ -1,0 +1,65 @@
+---
+# Settings for Nomad client nodes
+
+consul_server: false
+nomad_server: false
+
+# Join the Consul/Nomad server
+consul_retry_join:
+  - 192.168.0.200
+
+nomad_servers:
+  - 192.168.0.200
+
+# Docker
+docker_enabled: true
+
+# NFS mounts for shared storage
+nfs_mounts:
+  - src: "192.168.0.202:/srv/storage/media"
+    dest: "/media"
+    opts: "defaults,_netdev,nofail"
+  - src: "192.168.0.202:/srv/storage/downloads"
+    dest: "/downloads"
+    opts: "defaults,_netdev,nofail"
+
+# Host volumes for Nomad
+nomad_host_volumes:
+  # Per-service config volumes (local)
+  - name: "jellyfin-config"
+    path: "/opt/nomad/config-volumes/jellyfin"
+    read_only: false
+  - name: "sonarr-config"
+    path: "/opt/nomad/config-volumes/sonarr"
+    read_only: false
+  - name: "radarr-config"
+    path: "/opt/nomad/config-volumes/radarr"
+    read_only: false
+  - name: "prowlarr-config"
+    path: "/opt/nomad/config-volumes/prowlarr"
+    read_only: false
+  - name: "bazarr-config"
+    path: "/opt/nomad/config-volumes/bazarr"
+    read_only: false
+  - name: "sabnzbd-config"
+    path: "/opt/nomad/config-volumes/sabnzbd"
+    read_only: false
+  - name: "jellyseerr-config"
+    path: "/opt/nomad/config-volumes/jellyseerr"
+    read_only: false
+  - name: "homepage-config"
+    path: "/opt/nomad/config-volumes/homepage"
+    read_only: false
+  - name: "prometheus-config"
+    path: "/opt/nomad/config-volumes/prometheus"
+    read_only: false
+  - name: "grafana-config"
+    path: "/opt/nomad/config-volumes/grafana"
+    read_only: false
+  # Shared volumes (NFS mounted)
+  - name: "media"
+    path: "/media"
+    read_only: false
+  - name: "downloads"
+    path: "/downloads"
+    read_only: false

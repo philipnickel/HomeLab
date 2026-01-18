@@ -1,0 +1,60 @@
+# Proxmox Connection
+# Create an API token in Proxmox: Datacenter -> Permissions -> API Tokens
+proxmox_api_url          = "https://192.168.0.245:8006/api2/json"
+proxmox_api_token_id     = "root@pam!terraform"
+proxmox_api_token_secret = "your-token-secret-here"
+proxmox_tls_insecure     = true
+
+# Proxmox node name (usually "pve" for single-node setups)
+proxmox_node = "pve"
+
+# Network
+gateway    = "192.168.0.1"
+nameserver = "192.168.0.1"
+
+# Cloud-init template name
+# Create this first: https://pve.proxmox.com/wiki/Cloud-Init_Support
+cloudinit_template = "debian-12-cloudinit"
+cloudinit_storage  = "local-lvm"
+
+# SSH access
+ssh_user       = "debian"
+ssh_public_key = "ssh-rsa AAAA... your-key-here"
+
+# VM configurations (override defaults if needed)
+# vms = {
+#   nomad-server = {
+#     vmid        = 200
+#     cores       = 2
+#     memory      = 1536
+#     disk_size   = "20G"
+#     ip_address  = "192.168.0.200"
+#     description = "Nomad Server + Consul + Traefik"
+#     onboot      = true
+#     tags        = ["nomad", "consul", "traefik"]
+#   }
+#   nomad-client = {
+#     vmid        = 201
+#     cores       = 4
+#     memory      = 10240
+#     disk_size   = "40G"
+#     ip_address  = "192.168.0.201"
+#     description = "Nomad Client - Container Workloads"
+#     onboot      = true
+#     tags        = ["nomad", "docker"]
+#   }
+#   openmediavault = {
+#     vmid        = 202
+#     cores       = 2
+#     memory      = 2048
+#     disk_size   = "10G"
+#     ip_address  = "192.168.0.202"
+#     description = "OpenMediaVault NAS"
+#     onboot      = true
+#     tags        = ["nas", "storage"]
+#   }
+# }
+
+# Disk passthrough for OMV
+# Find your disk: ls -la /dev/disk/by-id/ | grep -v part
+# omv_passthrough_disk = "/dev/disk/by-id/ata-Samsung_SSD_870_EVO_2TB_XXXXXXXXXXXX"

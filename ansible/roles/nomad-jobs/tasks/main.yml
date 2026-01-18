@@ -1,0 +1,63 @@
+---
+# Nomad Jobs role - Deploy all Nomad job files
+
+- name: Create temporary directory for job files
+  file:
+    path: /tmp/nomad-jobs
+    state: directory
+    mode: '0755'
+  tags: [nomad-jobs]
+
+- name: Find all Nomad job files
+  find:
+    paths: "{{ playbook_dir }}/../nomad_jobs/core"
+    patterns: "*.nomad.hcl"
+  delegate_to: localhost
+  become: no
+  register: job_files
+  tags: [nomad-jobs]
+
+- name: Copy job files to server
+  copy:
+    src: "{{ item.path }}"
+    dest: "/tmp/nomad-jobs/{{ item.path | basename }}"
+    mode: '0644'
+  loop: "{{ job_files.files }}"
+  tags: [nomad-jobs]
+
+- name: Deploy Nomad jobs
+  command: "nomad job run /tmp/nomad-jobs/{{ item.path | basename }}"
+  loop: "{{ job_files.files }}"
+  register: job_results
+  changed_when: "'created' in job_results.stdout or 'modified' in job_results.stdout"
+  tags: [nomad-jobs]
+
+- name: Show deployment results
+  debug:
+    msg: "Deployed {{ item.item.path | basename }}: {{ 'Success' if item.rc == 0 else 'Failed' }}"
+  loop: "{{ job_results.results }}"
+  when: job_results.results is defined
+  tags: [nomad-jobs]
+
+- name: Clean up temporary job files
+  file:
+    path: /tmp/nomad-jobs
+    state: absent
+  tags: [nomad-jobs]
+
+- name: Wait for services to be healthy
+  pause:
+    seconds: 30
+    prompt: "Waiting for services to start..."
+  tags: [nomad-jobs]
+
+- name: Check Nomad job status
+  command: nomad status
+  register: nomad_status
+  changed_when: false
+  tags: [nomad-jobs]
+
+- name: Display running jobs
+  debug:
+    var: nomad_status.stdout_lines
+  tags: [nomad-jobs]

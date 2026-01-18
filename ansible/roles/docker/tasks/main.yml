@@ -1,0 +1,107 @@
+---
+# Docker role - Install and configure Docker CE
+
+- name: Create Docker keyrings directory
+  file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: '0755'
+  tags: [docker]
+
+- name: Check if Docker GPG key exists
+  stat:
+    path: /etc/apt/keyrings/docker.gpg
+  register: docker_gpg_key
+  tags: [docker]
+
+- name: Download Docker GPG key
+  get_url:
+    url: "https://download.docker.com/linux/{{ ansible_distribution | lower }}/gpg"
+    dest: /tmp/docker.gpg
+    mode: '0644'
+  when: not docker_gpg_key.stat.exists
+  tags: [docker]
+
+- name: Dearmor Docker GPG key
+  shell: gpg --dearmor < /tmp/docker.gpg > /etc/apt/keyrings/docker.gpg
+  args:
+    creates: /etc/apt/keyrings/docker.gpg
+  when: not docker_gpg_key.stat.exists
+  tags: [docker]
+
+- name: Add Docker repository
+  copy:
+    content: "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/{{ ansible_distribution | lower }} {{ ansible_distribution_release }} stable\n"
+    dest: /etc/apt/sources.list.d/docker.list
+    mode: '0644'
+  register: docker_repo
+  tags: [docker]
+
+- name: Update apt cache after adding Docker repo
+  apt:
+    update_cache: yes
+  when: docker_repo.changed
+  tags: [docker]
+
+- name: Install Docker
+  apt:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-buildx-plugin
+      - docker-compose-plugin
+    state: present
+    update_cache: yes
+  tags: [docker]
+
+- name: Create docker group
+  group:
+    name: docker
+    state: present
+  tags: [docker]
+
+- name: Add user to docker group
+  user:
+    name: "{{ service_user }}"
+    groups: docker
+    append: yes
+  when: service_user is defined
+  tags: [docker]
+
+- name: Create Docker daemon config directory
+  file:
+    path: /etc/docker
+    state: directory
+    mode: '0755'
+  tags: [docker]
+
+- name: Configure Docker daemon
+  copy:
+    content: |
+      {
+        "log-driver": "json-file",
+        "log-opts": {
+          "max-size": "10m",
+          "max-file": "3"
+        },
+        "storage-driver": "overlay2"
+      }
+    dest: /etc/docker/daemon.json
+    mode: '0644'
+  notify: restart docker
+  tags: [docker]
+
+- name: Start and enable Docker
+  systemd:
+    name: docker
+    state: started
+    enabled: yes
+  tags: [docker]
+
+- name: Ensure /dev/net/tun exists (for VPN containers)
+  command: mknod /dev/net/tun c 10 200
+  args:
+    creates: /dev/net/tun
+  ignore_errors: yes
+  tags: [docker]

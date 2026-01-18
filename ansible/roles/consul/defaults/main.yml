@@ -1,0 +1,10 @@
+---
+# Consul defaults
+
+consul_server: false
+consul_bootstrap_expect: 1
+consul_retry_join: []
+consul_domain: "consul"
+consul_dns_port: 8600
+consul_http_port: 8500
+datacenter: "homelab"

@@ -1,0 +1,10 @@
+---
+# Nomad client defaults
+
+datacenter: "homelab"
+nomad_servers: []
+nomad_host_volumes: []
+nfs_mounts: []
+
+service_uid: 1000
+service_gid: 1000

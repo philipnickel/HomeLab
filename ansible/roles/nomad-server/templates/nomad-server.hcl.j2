@@ -1,0 +1,28 @@
+datacenter = "{{ datacenter }}"
+data_dir   = "/opt/nomad/data"
+bind_addr  = "0.0.0.0"
+
+advertise {
+  http = "{{ ansible_default_ipv4.address }}"
+  rpc  = "{{ ansible_default_ipv4.address }}"
+  serf = "{{ ansible_default_ipv4.address }}"
+}
+
+server {
+  enabled          = true
+  bootstrap_expect = {{ nomad_bootstrap_expect | default(1) }}
+}
+
+# Enable telemetry for Prometheus
+telemetry {
+  collection_interval        = "15s"
+  disable_hostname           = true
+  prometheus_metrics         = true
+  publish_allocation_metrics = true
+  publish_node_metrics       = true
+}
+
+# Consul integration for service discovery
+consul {
+  address = "127.0.0.1:8500"
+}

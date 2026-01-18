@@ -1,0 +1,83 @@
+---
+# Consul role - Server and Agent configuration with DNS forwarding
+
+- name: Install Consul
+  apt:
+    name: consul
+    state: present
+    update_cache: yes
+  tags: [consul]
+
+- name: Create Consul data directory
+  file:
+    path: /opt/consul/data
+    state: directory
+    owner: consul
+    group: consul
+    mode: '0755'
+  tags: [consul]
+
+- name: Create Consul config directory
+  file:
+    path: /etc/consul.d
+    state: directory
+    owner: consul
+    group: consul
+    mode: '0755'
+  tags: [consul]
+
+- name: Deploy Consul configuration
+  template:
+    src: consul.hcl.j2
+    dest: /etc/consul.d/consul.hcl
+    owner: consul
+    group: consul
+    mode: '0640'
+  notify: restart consul
+  tags: [consul]
+
+- name: Create Consul systemd service
+  template:
+    src: consul.service.j2
+    dest: /etc/systemd/system/consul.service
+    mode: '0644'
+  notify: restart consul
+  tags: [consul]
+
+- name: Start and enable Consul
+  systemd:
+    name: consul
+    state: started
+    enabled: yes
+    daemon_reload: yes
+  tags: [consul]
+
+- name: Wait for Consul to be ready
+  uri:
+    url: "http://127.0.0.1:8500/v1/status/leader"
+    method: GET
+    status_code: 200
+  register: consul_leader
+  until: consul_leader.status == 200
+  retries: 30
+  delay: 2
+  tags: [consul]
+
+# DNS forwarding for *.consul domain
+- name: Create systemd-resolved directory
+  file:
+    path: /etc/systemd/resolved.conf.d
+    state: directory
+    mode: '0755'
+  tags: [consul, dns]
+
+- name: Configure DNS forwarding for consul domain
+  copy:
+    content: |
+      [Resolve]
+      DNS=127.0.0.1:8600
+      Domains=~consul
+    dest: /etc/systemd/resolved.conf.d/consul.conf
+    mode: '0644'
+  notify: restart systemd-resolved
+  tags: [consul, dns]

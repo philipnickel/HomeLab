@@ -1,0 +1,40 @@
+---
+# Common settings for all hosts
+
+# Timezone
+timezone: Europe/Copenhagen
+
+# DNS
+dns_servers:
+  - 192.168.0.1
+  - 8.8.8.8
+
+# Network
+network_cidr: "192.168.0.0/24"
+gateway: "192.168.0.1"
+
+# HashiCorp versions
+consul_version: "1.18.0"
+nomad_version: "1.7.3"
+
+# Datacenter name
+datacenter: "homelab"
+
+# Consul settings
+consul_domain: "consul"
+consul_dns_port: 8600
+consul_http_port: 8500
+
+# Nomad settings
+nomad_http_port: 4646
+nomad_rpc_port: 4647
+nomad_serf_port: 4648
+
+# Tailscale
+tailscale_auth_key: "{{ lookup('env', 'TAILSCALE_AUTH_KEY') | default('', true) }}"
+
+# Service user
+service_user: debian
+service_group: debian
+service_uid: 1000
+service_gid: 1000

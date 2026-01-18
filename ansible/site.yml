@@ -1,0 +1,122 @@
+---
+# HomeLab Main Playbook
+#
+# Usage:
+#   Full deployment:     ansible-playbook site.yml
+#   Infrastructure only: ansible-playbook site.yml --tags infrastructure
+#   Jobs only:           ansible-playbook site.yml --tags nomad-jobs
+#   Single role:         ansible-playbook site.yml --tags consul
+#
+# Available tags:
+#   - common        : Base packages, timezone, sysctl
+#   - docker        : Docker CE installation
+#   - consul        : Consul server/agent + DNS
+#   - nomad-server  : Nomad server configuration
+#   - nomad-client  : Nomad client with host volumes
+#   - tailscale     : Tailscale VPN
+#   - nomad-jobs    : Deploy Nomad job files
+#   - infrastructure: All infrastructure (no jobs)
+
+# ============================================
+# Nomad Server Configuration
+# ============================================
+- name: Configure Nomad Server
+  hosts: nomad_servers
+  become: yes
+  tags: [infrastructure]
+
+  roles:
+    - role: common
+      tags: [common]
+
+    - role: consul
+      tags: [consul]
+      vars:
+        consul_server: true
+
+    - role: nomad-server
+      tags: [nomad-server]
+
+    - role: tailscale
+      tags: [tailscale]
+
+# ============================================
+# Nomad Client Configuration
+# ============================================
+- name: Configure Nomad Client
+  hosts: nomad_clients
+  become: yes
+  tags: [infrastructure]
+
+  roles:
+    - role: common
+      tags: [common]
+
+    - role: docker
+      tags: [docker]
+
+    - role: consul
+      tags: [consul]
+      vars:
+        consul_server: false
+
+    - role: nomad-client
+      tags: [nomad-client]
+
+    - role: tailscale
+      tags: [tailscale]
+
+# ============================================
+# Deploy Nomad Jobs
+# ============================================
+- name: Deploy Nomad Jobs
+  hosts: nomad_servers
+  become: yes
+  tags: [nomad-jobs]
+
+  roles:
+    - role: nomad-jobs
+      tags: [nomad-jobs]
+
+# ============================================
+# OpenMediaVault Basic Setup
+# ============================================
+- name: Configure OpenMediaVault
+  hosts: nas
+  become: yes
+  tags: [infrastructure, nas]
+
+  tasks:
+    - name: Install common packages
+      apt:
+        name:
+          - curl
+          - wget
+          - htop
+        state: present
+        update_cache: yes
+      tags: [common]
+
+    - name: Install Tailscale on OMV
+      include_role:
+        name: tailscale
+      tags: [tailscale]
+
+    - name: Display OMV setup instructions
+      debug:
+        msg: |
+          OpenMediaVault is ready for manual configuration.
+
+          Access the web UI at: http://{{ ansible_host }}
+          Default credentials: admin / openmediavault
+
+          Manual setup steps:
+          1. Change admin password
+          2. Mount the 2TB SSD (should appear as /dev/sdb)
+          3. Mount the NVMe partition (should appear as /dev/sdc)
+          4. Install mergerfs plugin from omv-extras
+          5. Create mergerfs pool combining both disks
+          6. Create shared folders: media, downloads, personal
+          7. Enable NFS for media and downloads
+          8. Enable SMB for personal (and optionally media)
+      tags: [nas]

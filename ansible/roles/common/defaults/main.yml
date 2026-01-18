@@ -1,0 +1,21 @@
+---
+# Default variables for common role
+
+timezone: Europe/Copenhagen
+
+common_packages:
+  - apt-transport-https
+  - ca-certificates
+  - curl
+  - gnupg
+  - lsb-release
+  - software-properties-common
+  - vim
+  - htop
+  - jq
+  - unzip
+  - wget
+  - git
+  - nfs-common
+  - rsync
+  - python3-pip

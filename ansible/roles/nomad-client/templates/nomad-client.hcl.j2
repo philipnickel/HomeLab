@@ -1,0 +1,55 @@
+datacenter = "{{ datacenter }}"
+data_dir   = "/opt/nomad/data"
+bind_addr  = "0.0.0.0"
+
+advertise {
+  http = "{{ ansible_default_ipv4.address }}"
+  rpc  = "{{ ansible_default_ipv4.address }}"
+  serf = "{{ ansible_default_ipv4.address }}"
+}
+
+client {
+  enabled   = true
+  node_pool = "default"
+  servers   = {{ nomad_servers | to_json }}
+
+{% if nomad_host_volumes is defined and nomad_host_volumes | length > 0 %}
+{% for volume in nomad_host_volumes %}
+  host_volume "{{ volume.name }}" {
+    path      = "{{ volume.path }}"
+    read_only = {{ volume.read_only | default(false) | lower }}
+  }
+
+{% endfor %}
+{% endif %}
+}
+
+plugin "docker" {
+  config {
+    allow_privileged = true
+    allow_caps       = ["all"]
+    volumes {
+      enabled = true
+    }
+  }
+}
+
+plugin "raw_exec" {
+  config {
+    enabled = true
+  }
+}
+
+# Enable telemetry for Prometheus
+telemetry {
+  collection_interval        = "15s"
+  disable_hostname           = true
+  prometheus_metrics         = true
+  publish_allocation_metrics = true
+  publish_node_metrics       = true
+}
+
+# Consul integration for service discovery
+consul {
+  address = "127.0.0.1:8500"
+}

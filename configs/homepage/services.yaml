@@ -1,0 +1,78 @@
+---
+- Infrastructure:
+    - Traefik:
+        icon: traefik.png
+        href: http://traefik.kni.dk
+        description: Reverse Proxy
+    - Nomad:
+        icon: nomad.png
+        href: http://nomad.kni.dk
+        description: Container Orchestration
+    - Consul:
+        icon: consul.png
+        href: http://consul.kni.dk
+        description: Service Discovery
+    - OpenMediaVault:
+        icon: openmediavault.png
+        href: http://omv.kni.dk
+        description: NAS Management
+
+- Media:
+    - Jellyfin:
+        icon: jellyfin.png
+        href: http://jellyfin.kni.dk
+        description: Media Server
+    - Jellyseerr:
+        icon: jellyseerr.png
+        href: http://jellyseerr.kni.dk
+        description: Media Requests
+
+- Downloads:
+    - SABnzbd:
+        icon: sabnzbd.png
+        href: http://sabnzbd.kni.dk
+        description: Usenet Downloader
+    - Prowlarr:
+        icon: prowlarr.png
+        href: http://prowlarr.kni.dk
+        description: Indexer Manager
+        widget:
+          type: prowlarr
+          url: http://192.168.0.201:9696
+          key: bde634cc510b4040b00409de57013efc
+
+- Media Management:
+    - Sonarr:
+        icon: sonarr.png
+        href: http://sonarr.kni.dk
+        description: TV Shows
+        widget:
+          type: sonarr
+          url: http://192.168.0.201:8989
+          key: 2a479eb2dd6a47cf8b78a7065c3c881a
+    - Radarr:
+        icon: radarr.png
+        href: http://radarr.kni.dk
+        description: Movies
+        widget:
+          type: radarr
+          url: http://192.168.0.201:7878
+          key: 7011d72ddd0049eeaa61ac0ad0b784b2
+    - Bazarr:
+        icon: bazarr.png
+        href: http://bazarr.kni.dk
+        description: Subtitles
+
+- Monitoring:
+    - Grafana:
+        icon: grafana.png
+        href: http://grafana.kni.dk
+        description: Dashboards
+    - Prometheus:
+        icon: prometheus.png
+        href: http://prometheus.kni.dk
+        description: Metrics
+    - Speedtest:
+        icon: speedtest-tracker.png
+        href: http://speedtest.kni.dk
+        description: Internet Speed

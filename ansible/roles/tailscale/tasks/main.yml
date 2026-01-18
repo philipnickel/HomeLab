@@ -1,0 +1,54 @@
+---
+# Tailscale role - VPN for remote access
+
+- name: Add Tailscale GPG key
+  apt_key:
+    url: https://pkgs.tailscale.com/stable/debian/bookworm.noarmor.gpg
+    state: present
+  tags: [tailscale]
+
+- name: Add Tailscale repository
+  apt_repository:
+    repo: "deb https://pkgs.tailscale.com/stable/debian bookworm main"
+    state: present
+    filename: tailscale
+  tags: [tailscale]
+
+- name: Install Tailscale
+  apt:
+    name: tailscale
+    state: present
+    update_cache: yes
+  tags: [tailscale]
+
+- name: Start and enable Tailscale
+  systemd:
+    name: tailscaled
+    state: started
+    enabled: yes
+  tags: [tailscale]
+
+- name: Check Tailscale status
+  command: tailscale status
+  register: tailscale_status
+  changed_when: false
+  failed_when: false
+  tags: [tailscale]
+
+- name: Authenticate Tailscale
+  command: "tailscale up --authkey={{ tailscale_auth_key }} --accept-routes"
+  when:
+    - tailscale_auth_key | default('') | length > 0
+    - "'Logged out' in tailscale_status.stdout or 'not logged in' in tailscale_status.stderr"
+  tags: [tailscale]
+
+- name: Display Tailscale manual auth instructions
+  debug:
+    msg: |
+      Tailscale is installed but not authenticated.
+      Run 'tailscale up' on the host to authenticate manually,
+      or set TAILSCALE_AUTH_KEY environment variable before running Ansible.
+  when:
+    - tailscale_auth_key | default('') | length == 0
+    - "'Logged out' in tailscale_status.stdout or 'not logged in' in tailscale_status.stderr"
+  tags: [tailscale]

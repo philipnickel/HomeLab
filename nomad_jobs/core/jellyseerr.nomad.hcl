@@ -1,10 +1,30 @@
 job "jellyseerr" {
   datacenters = ["homelab"]
   type        = "service"
-  node_pool   = "services"
+  node_pool   = "default"
+
+  # Run on Proxmox node alongside other services
+  constraint {
+    attribute = "${node.class}"
+    value     = "proxmox"
+  }
 
   group "jellyseerr" {
     count = 1
+
+    restart {
+      attempts = 10
+      interval = "30m"
+      delay    = "15s"
+      mode     = "delay"
+    }
+
+    # Config volume - local for fast access
+    volume "config" {
+      type      = "host"
+      source    = "jellyseerr-config-local"
+      read_only = false
+    }
 
     network {
       port "http" {
@@ -16,12 +36,15 @@ job "jellyseerr" {
     task "jellyseerr" {
       driver = "docker"
 
+      volume_mount {
+        volume      = "config"
+        destination = "/app/config"
+        read_only   = false
+      }
+
       config {
         image = "fallenbagel/jellyseerr:latest"
         ports = ["http"]
-        volumes = [
-          "/opt/nomad/config-volumes/jellyseerr:/app/config",
-        ]
       }
 
       env {
@@ -48,6 +71,11 @@ job "jellyseerr" {
           path     = "/"
           interval = "30s"
           timeout  = "5s"
+        }
+        check_restart {
+          limit           = 3
+          grace           = "60s"
+          ignore_warnings = false
         }
       }
     }

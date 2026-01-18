@@ -1,0 +1,4 @@
+---
+# Nomad jobs defaults
+
+# Jobs are loaded from nomad_jobs/core/*.nomad.hcl

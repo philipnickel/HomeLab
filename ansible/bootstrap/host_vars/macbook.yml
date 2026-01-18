@@ -2,14 +2,14 @@
 # MacBook-specific Nomad client configuration
 
 # SMB mount configuration
-smb_server: "100.75.14.19"
+smb_server: "192.168.0.39"
 smb_share: "media"
-smb_mount_point: "/tmp/homelab-media"
+smb_mount_point: "/Volumes/media"
 
 # Host volumes for MacBook (paths match after SMB mount)
 nomad_host_volumes:
   - name: media
-    path: /tmp/homelab-media/media
+    path: /Volumes/media
     read_only: false
   - name: fileflows-temp
     path: /tmp/fileflows-node/temp

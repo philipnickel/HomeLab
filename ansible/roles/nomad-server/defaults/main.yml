@@ -1,0 +1,5 @@
+---
+# Nomad server defaults
+
+nomad_bootstrap_expect: 1
+datacenter: "homelab"

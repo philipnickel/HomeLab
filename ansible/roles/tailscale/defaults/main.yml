@@ -1,0 +1,5 @@
+---
+# Tailscale defaults
+
+# Set via environment variable: TAILSCALE_AUTH_KEY
+tailscale_auth_key: ""

@@ -1,0 +1,64 @@
+---
+# Nomad Server role
+
+- name: Install Nomad
+  apt:
+    name: nomad
+    state: present
+    update_cache: yes
+  tags: [nomad-server]
+
+- name: Create Nomad data directory
+  file:
+    path: /opt/nomad/data
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+  tags: [nomad-server]
+
+- name: Create Nomad config directory
+  file:
+    path: /etc/nomad.d
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+  tags: [nomad-server]
+
+- name: Deploy Nomad server configuration
+  template:
+    src: nomad-server.hcl.j2
+    dest: /etc/nomad.d/nomad.hcl
+    owner: root
+    group: root
+    mode: '0644'
+  notify: restart nomad
+  tags: [nomad-server]
+
+- name: Create Nomad systemd service
+  template:
+    src: nomad.service.j2
+    dest: /etc/systemd/system/nomad.service
+    mode: '0644'
+  notify: restart nomad
+  tags: [nomad-server]
+
+- name: Start and enable Nomad
+  systemd:
+    name: nomad
+    state: started
+    enabled: yes
+    daemon_reload: yes
+  tags: [nomad-server]
+
+- name: Wait for Nomad to be ready
+  uri:
+    url: "http://127.0.0.1:4646/v1/status/leader"
+    method: GET
+    status_code: 200
+  register: nomad_leader
+  until: nomad_leader.status == 200 and nomad_leader.json != '""'
+  retries: 30
+  delay: 2
+  tags: [nomad-server]

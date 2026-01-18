@@ -1,10 +1,17 @@
 job "traefik" {
   datacenters = ["homelab"]
   type        = "service"
-  node_pool   = "services"
+  node_pool   = "default"
 
   group "traefik" {
     count = 1
+
+    restart {
+      attempts = 10
+      interval = "30m"
+      delay    = "15s"
+      mode     = "delay"
+    }
 
     network {
       port "http" {
@@ -48,8 +55,6 @@ job "traefik" {
           [entryPoints]
             [entryPoints.web]
               address = ":80"
-            [entryPoints.websecure]
-              address = ":443"
             [entryPoints.traefik]
               address = ":8080"
 
@@ -70,17 +75,8 @@ job "traefik" {
             [providers.file]
               filename = "/local/dynamic.toml"
 
-          [metrics]
-            [metrics.prometheus]
-              entryPoint = "traefik"
-              addEntryPointsLabels = true
-              addServicesLabels = true
-              addRoutersLabels = true
-
           [log]
             level = "INFO"
-
-          [accessLog]
         EOF
         destination = "local/traefik.toml"
       }
@@ -97,6 +93,10 @@ job "traefik" {
               rule = "Host(`consul.kni.dk`)"
               service = "consul"
               entryPoints = ["web"]
+            [http.routers.omv]
+              rule = "Host(`omv.kni.dk`)"
+              service = "omv"
+              entryPoints = ["web"]
 
           [http.services]
             [http.services.nomad.loadBalancer]
@@ -104,7 +104,10 @@ job "traefik" {
                 url = "http://127.0.0.1:4646"
             [http.services.consul.loadBalancer]
               [[http.services.consul.loadBalancer.servers]]
-                url = "http://127.0.0.1:8500"
+                url = "http://192.168.0.200:8500"
+            [http.services.omv.loadBalancer]
+              [[http.services.omv.loadBalancer.servers]]
+                url = "http://192.168.0.202:80"
         EOF
         destination = "local/dynamic.toml"
       }
@@ -125,6 +128,11 @@ job "traefik" {
           port     = "dashboard"
           interval = "10s"
           timeout  = "2s"
+        }
+        check_restart {
+          limit           = 3
+          grace           = "60s"
+          ignore_warnings = false
         }
       }
 

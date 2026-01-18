@@ -1,0 +1,105 @@
+---
+# Nomad Client role - with host volumes and NFS mounts
+
+- name: Install Nomad
+  apt:
+    name: nomad
+    state: present
+    update_cache: yes
+  tags: [nomad-client]
+
+- name: Create Nomad data directory
+  file:
+    path: /opt/nomad/data
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+  tags: [nomad-client]
+
+- name: Create Nomad config directory
+  file:
+    path: /etc/nomad.d
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+  tags: [nomad-client]
+
+# Create host volume directories
+- name: Create config volume directories
+  file:
+    path: "{{ item.path }}"
+    state: directory
+    owner: "{{ service_uid | default(1000) }}"
+    group: "{{ service_gid | default(1000) }}"
+    mode: '0755'
+  loop: "{{ nomad_host_volumes | default([]) }}"
+  when: "'/opt/nomad/config-volumes' in item.path"
+  tags: [nomad-client, volumes]
+
+# Create NFS mount points
+- name: Create NFS mount points
+  file:
+    path: "{{ item.dest }}"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+  loop: "{{ nfs_mounts | default([]) }}"
+  tags: [nomad-client, nfs]
+
+# Configure NFS mounts (add to fstab but don't mount if server unavailable)
+- name: Add NFS mounts to fstab
+  mount:
+    path: "{{ item.dest }}"
+    src: "{{ item.src }}"
+    fstype: nfs
+    opts: "{{ item.opts | default('defaults,_netdev,nofail') }}"
+    state: present  # Just add to fstab, don't mount
+  loop: "{{ nfs_mounts | default([]) }}"
+  tags: [nomad-client, nfs]
+
+- name: Try to mount NFS shares (ignore if server unavailable)
+  command: "mount {{ item.dest }}"
+  loop: "{{ nfs_mounts | default([]) }}"
+  ignore_errors: yes
+  changed_when: false
+  tags: [nomad-client, nfs]
+
+- name: Deploy Nomad client configuration
+  template:
+    src: nomad-client.hcl.j2
+    dest: /etc/nomad.d/nomad.hcl
+    owner: root
+    group: root
+    mode: '0644'
+  notify: restart nomad
+  tags: [nomad-client]
+
+- name: Create Nomad systemd service
+  template:
+    src: nomad.service.j2
+    dest: /etc/systemd/system/nomad.service
+    mode: '0644'
+  notify: restart nomad
+  tags: [nomad-client]
+
+- name: Start and enable Nomad
+  systemd:
+    name: nomad
+    state: started
+    enabled: yes
+    daemon_reload: yes
+  tags: [nomad-client]
+
+- name: Wait for Nomad client to register
+  uri:
+    url: "http://{{ nomad_servers[0] }}:4646/v1/nodes"
+    method: GET
+    status_code: 200
+  register: nomad_nodes
+  until: nomad_nodes.status == 200
+  retries: 30
+  delay: 2
+  tags: [nomad-client]

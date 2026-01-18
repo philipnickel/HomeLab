@@ -1,0 +1,2 @@
+---
+# Docker integration is not used - services are accessed via direct URLs

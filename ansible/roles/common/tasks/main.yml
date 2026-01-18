@@ -1,0 +1,109 @@
+---
+# Common role - base system configuration
+
+- name: Set timezone
+  timezone:
+    name: "{{ timezone }}"
+  tags: [common, timezone]
+
+- name: Update apt cache
+  apt:
+    update_cache: yes
+    cache_valid_time: 3600
+  tags: [common, packages]
+
+- name: Install common packages
+  apt:
+    name:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - gnupg
+      - lsb-release
+      - software-properties-common
+      - vim
+      - htop
+      - jq
+      - unzip
+      - wget
+      - git
+      - nfs-common
+      - rsync
+      - python3-pip
+    state: present
+  tags: [common, packages]
+
+- name: Set hostname
+  hostname:
+    name: "{{ inventory_hostname }}"
+  tags: [common, hostname]
+
+- name: Update /etc/hosts
+  lineinfile:
+    path: /etc/hosts
+    regexp: '^127\.0\.1\.1'
+    line: "127.0.1.1 {{ inventory_hostname }}"
+    state: present
+  tags: [common, hostname]
+
+- name: Configure sysctl for containers
+  sysctl:
+    name: "{{ item.name }}"
+    value: "{{ item.value }}"
+    state: present
+    reload: yes
+  loop:
+    - { name: 'net.bridge.bridge-nf-call-iptables', value: '1' }
+    - { name: 'net.bridge.bridge-nf-call-ip6tables', value: '1' }
+    - { name: 'net.ipv4.ip_forward', value: '1' }
+  ignore_errors: yes
+  tags: [common, sysctl]
+
+- name: Ensure br_netfilter module is loaded
+  modprobe:
+    name: br_netfilter
+    state: present
+  ignore_errors: yes
+  tags: [common, sysctl]
+
+- name: Create keyrings directory
+  file:
+    path: /usr/share/keyrings
+    state: directory
+    mode: '0755'
+  tags: [common, hashicorp]
+
+- name: Check if HashiCorp keyring exists
+  stat:
+    path: /usr/share/keyrings/hashicorp-archive-keyring.gpg
+  register: hashicorp_keyring
+  tags: [common, hashicorp]
+
+- name: Download HashiCorp GPG key
+  get_url:
+    url: https://apt.releases.hashicorp.com/gpg
+    dest: /tmp/hashicorp.gpg
+    mode: '0644'
+  when: not hashicorp_keyring.stat.exists
+  tags: [common, hashicorp]
+
+- name: Dearmor and install HashiCorp GPG key
+  shell: gpg --dearmor < /tmp/hashicorp.gpg > /usr/share/keyrings/hashicorp-archive-keyring.gpg
+  args:
+    creates: /usr/share/keyrings/hashicorp-archive-keyring.gpg
+  when: not hashicorp_keyring.stat.exists
+  tags: [common, hashicorp]
+
+- name: Add HashiCorp repository
+  copy:
+    content: "deb [arch=amd64 signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com {{ ansible_distribution_release }} main\n"
+    dest: /etc/apt/sources.list.d/hashicorp.list
+    mode: '0644'
+  register: hashicorp_repo
+  tags: [common, hashicorp]
+
+- name: Update apt cache after adding HashiCorp repo
+  apt:
+    update_cache: yes
+  when: hashicorp_repo.changed
+  tags: [common, hashicorp]
