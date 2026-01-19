@@ -32,12 +32,11 @@ These compose files are designed for Unraid with Portainer. They use standard Un
 
 | Stack | Services | Ports |
 |-------|----------|-------|
-| `arr-stack.yml` | Radarr, Sonarr, Prowlarr, Bazarr | 7878, 8989, 9696, 6767 |
+| `arr-stack.yml` | Gluetun VPN, Radarr, Sonarr, Lidarr, Readarr, Prowlarr, Bazarr | 7878, 8989, 8686, 8787, 9696, 6767, 8001 |
 | `downloaders.yml` | Gluetun (VPN), SABnzbd | 8080, 8001 |
 | `jellyfin.yml` | Jellyfin | 8096 |
 | `jellyseerr.yml` | Jellyseerr | 5055 |
 | `navidrome.yml` | Navidrome (music) | 4533 |
-| `lidarr.yml` | Lidarr (music manager) | 8686 |
 | `monitoring.yml` | Uptime Kuma, Glances | 3001, 61208 |
 | `immich.yml` | Immich (photos) | 2283 |
 | `traefik.yml` | Traefik (reverse proxy) | 80, 8080 |
