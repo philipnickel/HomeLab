@@ -1,16 +1,48 @@
 version: "3.8"
 
-# Arr Stack - Media Management
-# Radarr (movies), Sonarr (tv), Prowlarr (indexers), Bazarr (subtitles)
+# Arr Stack - Media Management with VPN
+# All traffic routed through Gluetun VPN
+#
+# Services: Radarr, Sonarr, Lidarr, Readarr, Prowlarr, Bazarr
 #
 # Unraid paths:
 #   /mnt/user/appdata/<app> - config files
 #   /mnt/user/data - shared data folder (media + downloads)
 
 services:
+  gluetun:
+    image: qmcgaw/gluetun:latest
+    container_name: gluetun-arr
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    environment:
+      - VPN_SERVICE_PROVIDER=protonvpn
+      - VPN_TYPE=wireguard
+      - WIREGUARD_PRIVATE_KEY=${WIREGUARD_PRIVATE_KEY}
+      - SERVER_COUNTRIES=${SERVER_COUNTRIES:-Netherlands}
+      - TZ=Europe/Copenhagen
+      - FIREWALL_INPUT_PORTS=7878,8989,8686,8787,9696,6767
+      - FREE_ONLY=off
+    ports:
+      - 7878:7878   # Radarr
+      - 8989:8989   # Sonarr
+      - 8686:8686   # Lidarr
+      - 8787:8787   # Readarr
+      - 9696:9696   # Prowlarr
+      - 6767:6767   # Bazarr
+      - 8001:8001   # Gluetun control
+    volumes:
+      - /mnt/user/appdata/gluetun:/gluetun
+    restart: unless-stopped
+
   radarr:
     image: linuxserver/radarr:latest
     container_name: radarr
+    network_mode: "service:gluetun"
+    depends_on:
+      - gluetun
     environment:
       - PUID=1000
       - PGID=1000
@@ -18,13 +50,14 @@ services:
     volumes:
       - /mnt/user/appdata/radarr:/config
       - /mnt/user/data:/data
-    ports:
-      - 7878:7878
     restart: unless-stopped
 
   sonarr:
     image: linuxserver/sonarr:latest
     container_name: sonarr
+    network_mode: "service:gluetun"
+    depends_on:
+      - gluetun
     environment:
       - PUID=1000
       - PGID=1000
@@ -32,26 +65,58 @@ services:
     volumes:
       - /mnt/user/appdata/sonarr:/config
       - /mnt/user/data:/data
-    ports:
-      - 8989:8989
+    restart: unless-stopped
+
+  lidarr:
+    image: linuxserver/lidarr:latest
+    container_name: lidarr
+    network_mode: "service:gluetun"
+    depends_on:
+      - gluetun
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Copenhagen
+    volumes:
+      - /mnt/user/appdata/lidarr:/config
+      - /mnt/user/data:/data
+    restart: unless-stopped
+
+  readarr:
+    image: linuxserver/readarr:develop
+    container_name: readarr
+    network_mode: "service:gluetun"
+    depends_on:
+      - gluetun
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Copenhagen
+    volumes:
+      - /mnt/user/appdata/readarr:/config
+      - /mnt/user/data:/data
     restart: unless-stopped
 
   prowlarr:
     image: linuxserver/prowlarr:latest
     container_name: prowlarr
+    network_mode: "service:gluetun"
+    depends_on:
+      - gluetun
     environment:
       - PUID=1000
       - PGID=1000
       - TZ=Europe/Copenhagen
     volumes:
       - /mnt/user/appdata/prowlarr:/config
-    ports:
-      - 9696:9696
     restart: unless-stopped
 
   bazarr:
     image: linuxserver/bazarr:latest
     container_name: bazarr
+    network_mode: "service:gluetun"
+    depends_on:
+      - gluetun
     environment:
       - PUID=1000
       - PGID=1000
@@ -59,6 +124,4 @@ services:
     volumes:
       - /mnt/user/appdata/bazarr:/config
       - /mnt/user/data:/data
-    ports:
-      - 6767:6767
     restart: unless-stopped
