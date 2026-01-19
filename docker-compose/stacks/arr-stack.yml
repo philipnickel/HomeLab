@@ -1,0 +1,64 @@
+version: "3.8"
+
+# Arr Stack - Media Management
+# Radarr (movies), Sonarr (tv), Prowlarr (indexers), Bazarr (subtitles)
+#
+# Unraid paths:
+#   /mnt/user/appdata/<app> - config files
+#   /mnt/user/data - shared data folder (media + downloads)
+
+services:
+  radarr:
+    image: linuxserver/radarr:latest
+    container_name: radarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Copenhagen
+    volumes:
+      - /mnt/user/appdata/radarr:/config
+      - /mnt/user/data:/data
+    ports:
+      - 7878:7878
+    restart: unless-stopped
+
+  sonarr:
+    image: linuxserver/sonarr:latest
+    container_name: sonarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Copenhagen
+    volumes:
+      - /mnt/user/appdata/sonarr:/config
+      - /mnt/user/data:/data
+    ports:
+      - 8989:8989
+    restart: unless-stopped
+
+  prowlarr:
+    image: linuxserver/prowlarr:latest
+    container_name: prowlarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Copenhagen
+    volumes:
+      - /mnt/user/appdata/prowlarr:/config
+    ports:
+      - 9696:9696
+    restart: unless-stopped
+
+  bazarr:
+    image: linuxserver/bazarr:latest
+    container_name: bazarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Copenhagen
+    volumes:
+      - /mnt/user/appdata/bazarr:/config
+      - /mnt/user/data:/data
+    ports:
+      - 6767:6767
+    restart: unless-stopped

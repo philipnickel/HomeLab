@@ -1,0 +1,25 @@
+version: "3.8"
+
+# Jellyfin - Media Server
+#
+# For hardware transcoding on Unraid, uncomment the devices section
+
+services:
+  jellyfin:
+    image: linuxserver/jellyfin:latest
+    container_name: jellyfin
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Copenhagen
+    volumes:
+      - /mnt/user/appdata/jellyfin:/config
+      - /mnt/user/data/media:/data/media
+    ports:
+      - 8096:8096
+      - 8920:8920  # HTTPS (optional)
+      - 7359:7359/udp  # Discovery (optional)
+    # Uncomment for Intel iGPU hardware transcoding:
+    # devices:
+    #   - /dev/dri:/dev/dri
+    restart: unless-stopped

@@ -1,0 +1,51 @@
+version: "3.8"
+
+# Immich - Self-hosted Google Photos Alternative
+#
+# Full-featured photo/video backup with AI-powered search
+# Note: Requires more resources (4GB+ RAM recommended)
+
+services:
+  immich-server:
+    image: ghcr.io/immich-app/immich-server:release
+    container_name: immich-server
+    environment:
+      - DB_HOSTNAME=immich-postgres
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=postgres
+      - DB_DATABASE_NAME=immich
+      - REDIS_HOSTNAME=immich-redis
+      - UPLOAD_LOCATION=/usr/src/app/upload
+      - IMMICH_MACHINE_LEARNING_URL=http://immich-machine-learning:3003
+    volumes:
+      - /mnt/user/appdata/immich/upload:/usr/src/app/upload
+      - /mnt/user/data/photos:/usr/src/app/external:ro  # Optional: external library
+    ports:
+      - 2283:2283
+    depends_on:
+      - immich-redis
+      - immich-postgres
+    restart: unless-stopped
+
+  immich-machine-learning:
+    image: ghcr.io/immich-app/immich-machine-learning:release
+    container_name: immich-machine-learning
+    volumes:
+      - /mnt/user/appdata/immich/model-cache:/cache
+    restart: unless-stopped
+
+  immich-redis:
+    image: redis:6.2-alpine
+    container_name: immich-redis
+    restart: unless-stopped
+
+  immich-postgres:
+    image: tensorchord/pgvecto-rs:pg14-v0.2.0
+    container_name: immich-postgres
+    environment:
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=immich
+    volumes:
+      - /mnt/user/appdata/immich/postgres:/var/lib/postgresql/data
+    restart: unless-stopped

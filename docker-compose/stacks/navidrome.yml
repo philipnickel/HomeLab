@@ -1,0 +1,21 @@
+version: "3.8"
+
+# Navidrome - Music Server
+#
+# Lightweight music streaming server with web UI and Subsonic API
+
+services:
+  navidrome:
+    image: deluan/navidrome:latest
+    container_name: navidrome
+    environment:
+      - ND_SCANSCHEDULE=1h
+      - ND_LOGLEVEL=info
+      - ND_SESSIONTIMEOUT=24h
+      - ND_BASEURL=
+    volumes:
+      - /mnt/user/appdata/navidrome:/data
+      - /mnt/user/data/media/music:/music:ro
+    ports:
+      - 4533:4533
+    restart: unless-stopped

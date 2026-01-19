@@ -1,0 +1,27 @@
+version: "3.8"
+
+# Monitoring Stack - Uptime Kuma + Glances
+#
+# Simple monitoring without the complexity of Prometheus/Grafana
+
+services:
+  uptime-kuma:
+    image: louislam/uptime-kuma:latest
+    container_name: uptime-kuma
+    volumes:
+      - /mnt/user/appdata/uptime-kuma:/app/data
+    ports:
+      - 3001:3001
+    restart: unless-stopped
+
+  glances:
+    image: nicolargo/glances:latest
+    container_name: glances
+    environment:
+      - GLANCES_OPT=-w
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    ports:
+      - 61208:61208
+    pid: host
+    restart: unless-stopped

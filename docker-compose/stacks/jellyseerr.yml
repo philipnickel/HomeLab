@@ -1,0 +1,18 @@
+version: "3.8"
+
+# Jellyseerr - Media Request Management
+#
+# Allows users to request movies/shows, integrates with Radarr/Sonarr
+
+services:
+  jellyseerr:
+    image: fallenbagel/jellyseerr:latest
+    container_name: jellyseerr
+    environment:
+      - TZ=Europe/Copenhagen
+      - LOG_LEVEL=info
+    volumes:
+      - /mnt/user/appdata/jellyseerr:/app/config
+    ports:
+      - 5055:5055
+    restart: unless-stopped

@@ -1,0 +1,44 @@
+version: "3.8"
+
+# Downloaders Stack - SABnzbd with VPN (Gluetun)
+#
+# SABnzbd traffic goes through Gluetun VPN tunnel
+# Set your VPN credentials in the environment variables below
+
+services:
+  gluetun:
+    image: qmcgaw/gluetun:latest
+    container_name: gluetun
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    environment:
+      - VPN_SERVICE_PROVIDER=protonvpn
+      - VPN_TYPE=wireguard
+      - WIREGUARD_PRIVATE_KEY=${WIREGUARD_PRIVATE_KEY}
+      - SERVER_COUNTRIES=${SERVER_COUNTRIES:-Netherlands}
+      - TZ=Europe/Copenhagen
+      - FIREWALL_INPUT_PORTS=8080
+      - FREE_ONLY=off
+    ports:
+      - 8080:8080  # SABnzbd web UI
+      - 8001:8001  # Gluetun control
+    volumes:
+      - /mnt/user/appdata/gluetun:/gluetun
+    restart: unless-stopped
+
+  sabnzbd:
+    image: linuxserver/sabnzbd:latest
+    container_name: sabnzbd
+    network_mode: "service:gluetun"  # Route through VPN
+    depends_on:
+      - gluetun
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Copenhagen
+    volumes:
+      - /mnt/user/appdata/sabnzbd:/config
+      - /mnt/user/data/usenet:/data/usenet
+    restart: unless-stopped
